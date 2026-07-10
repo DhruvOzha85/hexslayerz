@@ -1,6 +1,6 @@
 import type { AIProviderType } from "../ai";
 
-export interface Context(AI)sSettings {
+export interface ContextAISettings {
   defaultProvider: AIProviderType;
   theme: "dark" | "light" | "system";
   maxSummaryLength: number;

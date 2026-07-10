@@ -1,14 +1,14 @@
 import { create } from "zustand";
-import { ApplicationService, type Context(AI)sSettings } from "../services";
+import { ApplicationService, type ContextAISettings } from "../services";
 
 interface SettingsState {
-  settings: Context(AI)sSettings | null;
+  settings: ContextAISettings | null;
   isLoading: boolean;
   error: string | null;
   successMessage: string | null;
 
   loadSettings: () => Promise<void>;
-  updateSettings: (updates: Partial<Context(AI)sSettings>) => Promise<void>;
+  updateSettings: (updates: Partial<ContextAISettings>) => Promise<void>;
   resetSettings: () => Promise<void>;
   clearSuccessMessage: () => void;
   clearError: () => void;
@@ -39,7 +39,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     }
   },
 
-  updateSettings: async (updates: Partial<Context(AI)sSettings>) => {
+  updateSettings: async (updates: Partial<ContextAISettings>) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
       const newSettings = await ApplicationService.saveSettings(updates);

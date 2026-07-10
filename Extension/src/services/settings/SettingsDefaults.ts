@@ -1,7 +1,7 @@
-import type { Context(AI)sSettings } from "./SettingsTypes";
+import type { ContextAISettings } from "./SettingsTypes";
 import { AIProviderType } from "../ai";
 
-export const DEFAULT_SETTINGS: Context(AI)sSettings = {
+export const DEFAULT_SETTINGS: ContextAISettings = {
   defaultProvider: AIProviderType.GEMINI,
   theme: "dark",
   maxSummaryLength: 500,

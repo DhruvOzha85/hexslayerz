@@ -1,4 +1,4 @@
-import type { Context(AI)sSettings } from "./SettingsTypes";
+import type { ContextAISettings } from "./SettingsTypes";
 import { DEFAULT_SETTINGS } from "./SettingsDefaults";
 import { AIProviderType } from "../ai";
 
@@ -6,7 +6,7 @@ export class SettingsValidator {
   /**
    * Validates a settings object, merging it with defaults and correcting invalid fields.
    */
-  static validate(input: Partial<Context(AI)sSettings> | null): Context(AI)sSettings {
+  static validate(input: Partial<ContextAISettings> | null): ContextAISettings {
     if (!input) return { ...DEFAULT_SETTINGS };
 
     return {

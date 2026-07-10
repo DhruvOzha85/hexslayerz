@@ -9,7 +9,7 @@ import {
   CheckpointFilter,
   type Checkpoint,
 } from "../checkpoint";
-import { SettingsService, type Context(AI)sSettings } from "../settings";
+import { SettingsService, type ContextAISettings } from "../settings";
 import { DataService } from "../data";
 import { TabService } from "../chrome/TabService";
 import type { ExtractedContent } from "../content-extraction";
@@ -61,17 +61,17 @@ export class ApplicationService {
 
   // --- Settings Operations ---
 
-  static async loadSettings(): Promise<Context(AI)sSettings> {
+  static async loadSettings(): Promise<ContextAISettings> {
     return await SettingsService.loadSettings();
   }
 
   static async saveSettings(
-    updates: Partial<Context(AI)sSettings>,
-  ): Promise<Context(AI)sSettings> {
+    updates: Partial<ContextAISettings>,
+  ): Promise<ContextAISettings> {
     return await SettingsService.saveSettings(updates);
   }
 
-  static async resetSettings(): Promise<Context(AI)sSettings> {
+  static async resetSettings(): Promise<ContextAISettings> {
     return await SettingsService.resetSettings();
   }
 

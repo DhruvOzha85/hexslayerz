@@ -1,5 +1,5 @@
 import { StorageService } from "../chrome";
-import type { Context(AI)sSettings } from "../settings";
+import type { ContextAISettings } from "../settings";
 import { SettingsValidator, SettingsService } from "../settings";
 import type { Checkpoint } from "../checkpoint";
 import { CheckpointValidator, CheckpointRecall, CheckpointStorage } from "../checkpoint";
@@ -7,10 +7,10 @@ import { CheckpointValidator, CheckpointRecall, CheckpointStorage } from "../che
 // --- TYPES & CONSTANTS ---
 export const CURRENT_DATA_VERSION = 1;
 
-export interface Context(AI)sExportPayload {
+export interface ContextAIExportPayload {
   version: number;
   timestamp: number;
-  settings: Context(AI)sSettings;
+  settings: ContextAISettings;
   checkpoints: Checkpoint[];
 }
 
@@ -31,7 +31,7 @@ export class MigrationService {
 }
 
 export class DataValidator {
-  static validateSchema(payload: unknown): Context(AI)sExportPayload {
+  static validateSchema(payload: unknown): ContextAIExportPayload {
     if (!payload || typeof payload !== "object") throw new Error("Invalid payload: Must be a JSON object.");
     const data = payload as Record<string, unknown>;
 
@@ -55,7 +55,7 @@ export class DataValidator {
       version: data.version,
       timestamp: data.timestamp,
       settings: validSettings,
-      checkpoints: validCheckpoints as unknown as Context(AI)sExportPayload["checkpoints"],
+      checkpoints: validCheckpoints as unknown as ContextAIExportPayload["checkpoints"],
     };
   }
 }
@@ -66,7 +66,7 @@ export class DataService {
     const settings = await SettingsService.loadSettings();
     const checkpoints = await CheckpointRecall.getAll();
 
-    const payload: Context(AI)sExportPayload = {
+    const payload: ContextAIExportPayload = {
       version: CURRENT_DATA_VERSION,
       timestamp: Date.now(),
       settings,
