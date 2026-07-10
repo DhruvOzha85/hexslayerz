@@ -25,14 +25,25 @@ export class ContentExtractor {
     const url = window.location.href;
     const websiteType = WebsiteClassifier.classify(url);
 
-    // 1. Clone the entire document body to avoid live-DOM mutation
-    const clone = document.body.cloneNode(true) as HTMLElement;
+    // 1. Find the main content container first (or isolate it)
+    let contentRoot: HTMLElement;
 
-    // 2. Strip noise from the clone
-    NoiseFilter.filter(clone, websiteType);
-
-    // 3. Find the main content container
-    const contentRoot = this.findContentRoot(clone);
+    if (websiteType === "github") {
+      // For GitHub, bypass whole-page cloning and isolate the README directly
+      const readme = document.querySelector(".markdown-body");
+      if (readme) {
+        contentRoot = readme.cloneNode(true) as HTMLElement;
+        NoiseFilter.filter(contentRoot, websiteType);
+      } else {
+        const clone = document.body.cloneNode(true) as HTMLElement;
+        NoiseFilter.filter(clone, websiteType);
+        contentRoot = this.findContentRoot(clone);
+      }
+    } else {
+      const clone = document.body.cloneNode(true) as HTMLElement;
+      NoiseFilter.filter(clone, websiteType);
+      contentRoot = this.findContentRoot(clone);
+    }
 
     // 4. Extract the page title
     const title = this.extractTitle(websiteType);
@@ -56,6 +67,12 @@ export class ContentExtractor {
    * Priority: <article> > <main> > [role="main"] > largest text block > body
    */
   private static findContentRoot(root: HTMLElement): HTMLElement {
+    // Try to find GitHub markdown body first (specific to github sites)
+    const markdownBody = root.querySelector(".markdown-body");
+    if (markdownBody && (markdownBody.textContent || "").trim().length > 100) {
+      return markdownBody as HTMLElement;
+    }
+
     // Try semantic containers first
     const article = root.querySelector("article");
     if (article && (article.textContent || "").trim().length > 200) {
@@ -192,57 +209,42 @@ export class ContentExtractor {
     const textParts: string[] = [];
     let collecting = start === null;
 
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ALL, {
       acceptNode: (node) => {
-        const el = node as HTMLElement;
-        // Skip trivially empty nodes but accept block-level containers
-        if (el.tagName && !["SCRIPT", "STYLE"].includes(el.tagName)) {
-          return NodeFilter.FILTER_ACCEPT;
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          if (["SCRIPT", "STYLE", "NOSCRIPT", "SVG"].includes(el.tagName.toUpperCase())) {
+            return NodeFilter.FILTER_REJECT;
+          }
         }
-        return NodeFilter.FILTER_SKIP;
+        return NodeFilter.FILTER_ACCEPT;
       },
     });
 
-    let node = walker.nextNode() as HTMLElement | null;
+    let node = walker.nextNode();
     while (node) {
       if (start && node === start) {
         collecting = true;
-        node = walker.nextNode() as HTMLElement | null;
-        continue;
-      }
-
-      if (end && node === end) {
+      } else if (end && node === end) {
         break;
-      }
-
-      if (collecting) {
-        const tag = node.tagName?.toLowerCase();
-
-        // Handle special elements
-        if (tag === "pre" || tag === "code") {
-          const codeText = (node.textContent || "").trim();
-          if (codeText) {
-            textParts.push(`\`\`\`\n${codeText}\n\`\`\``);
+      } else if (collecting) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.nodeValue?.trim();
+          if (text) {
+            textParts.push(text);
           }
-        } else if (tag === "li") {
-          const liText = (node.textContent || "").trim();
-          if (liText) {
-            textParts.push(`• ${liText}`);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const tag = (node as HTMLElement).tagName.toUpperCase();
+          if (["P", "DIV", "BR", "LI", "TR", "H1", "H2", "H3", "H4", "H5", "H6"].includes(tag)) {
+            textParts.push("\n");
           }
-        } else if (tag === "p") {
-          const pText = (node.textContent || "").trim();
-          if (pText) {
-            textParts.push(pText);
-          }
-        } else if (tag === "table") {
-          textParts.push(this.tableToText(node));
         }
       }
-
-      node = walker.nextNode() as HTMLElement | null;
+      node = walker.nextNode();
     }
 
-    return textParts.join("\n\n");
+    // Clean up extra newlines and spaces
+    return textParts.join(" ").replace(/\n\s+/g, "\n").replace(/\n+/g, "\n\n").trim();
   }
 
   /**
@@ -256,26 +258,7 @@ export class ContentExtractor {
     return root.innerText || root.textContent || "";
   }
 
-  /**
-   * Convert an HTML <table> element into readable plain text.
-   */
-  private static tableToText(tableEl: HTMLElement): string {
-    const rows = tableEl.querySelectorAll("tr");
-    const lines: string[] = [];
 
-    rows.forEach((row) => {
-      const cells = row.querySelectorAll("th, td");
-      const cellTexts: string[] = [];
-      cells.forEach((cell) => {
-        cellTexts.push((cell.textContent || "").trim());
-      });
-      if (cellTexts.length > 0) {
-        lines.push(cellTexts.join(" | "));
-      }
-    });
-
-    return lines.join("\n");
-  }
 
   /**
    * Build the full plain text from the content root.
