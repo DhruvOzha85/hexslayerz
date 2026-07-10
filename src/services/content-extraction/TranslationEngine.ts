@@ -8,11 +8,11 @@ const TRANSLATION_SYSTEM_PROMPT = `You are a highly accurate translation engine.
 Your task is to translate the provided webpage content into the requested language while preserving the exact JSON structure.
 
 INSTRUCTIONS:
-1. Translate the 'title', the 'content' block, and every 'text' and 'heading' within the 'sections' array into the requested language.
-2. DO NOT change the keys of the JSON object. Keep 'title', 'content', 'url', 'websiteType', 'extractedAt', 'sections', 'heading', and 'text' exactly as they are.
+1. Translate the 'title', and every 'text' and 'heading' within the 'sections' array into the requested language.
+2. DO NOT change the keys of the JSON object. Keep 'title', 'sections', 'heading', and 'text' exactly as they are.
 3. DO NOT summarize or alter the meaning. Provide a direct and natural translation.
 4. If a piece of text is code, a name, or an untranslatable term, leave it as is.
-5. You MUST return ONLY valid JSON matching the exact structure of the input object. No markdown wrappers unless it is part of the original text.`;
+5. You MUST return ONLY valid JSON matching the exact structure of the input object. No markdown wrappers.`;
 
 export class TranslationEngine {
   /**
@@ -38,11 +38,13 @@ export class TranslationEngine {
         apiKey = settings.apiKeys.groq;
       }
 
-      // Limit the sections to avoid massive token usage for translation. 
-      // If it's too large, it might fail or cost a lot.
-      // We'll pass the full object but truncate if absolutely necessary. For now, pass as JSON.
-      const payload = JSON.stringify(pageContent, null, 2);
+      // Only send title and sections to reduce tokens and avoid duplicating 'content' block
+      const payloadObj = {
+        title: pageContent.title,
+        sections: pageContent.sections,
+      };
 
+      const payload = JSON.stringify(payloadObj, null, 2);
       const user = `TARGET LANGUAGE: ${targetLanguage}\n\nCONTENT TO TRANSLATE (JSON):\n${payload}`;
 
       const prompt = {
@@ -53,28 +55,35 @@ export class TranslationEngine {
       const provider = ProviderFactory.getProvider(providerType, apiKey);
       const response = await provider.summarize({ prompt });
 
-      // The AI should return a JSON string
       let responseText = response.content.trim();
       
-      // Clean up markdown code blocks if the AI wrapped the response
-      if (responseText.startsWith("\`\`\`json")) {
-        responseText = responseText.replace(/^\`\`\`json/i, "").replace(/\`\`\`$/, "").trim();
-      } else if (responseText.startsWith("\`\`\`")) {
-        responseText = responseText.replace(/^\`\`\`/i, "").replace(/\`\`\`$/, "").trim();
+      // Robust JSON extraction: Find the first '{' and last '}'
+      const firstBrace = responseText.indexOf('{');
+      const lastBrace = responseText.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        responseText = responseText.substring(firstBrace, lastBrace + 1);
+      } else {
+        throw new Error("No JSON object found in the translation response.");
       }
 
-      const translatedContent: ExtractedContent = JSON.parse(responseText);
+      const translatedObj = JSON.parse(responseText);
       
-      // Ensure metadata that shouldn't change is preserved
-      translatedContent.url = pageContent.url;
-      translatedContent.websiteType = pageContent.websiteType;
-      translatedContent.extractedAt = pageContent.extractedAt;
+      // Reconstruct the ExtractedContent
+      const translatedSections = translatedObj.sections || pageContent.sections;
+      const translatedContent: ExtractedContent = {
+        title: translatedObj.title || pageContent.title,
+        sections: translatedSections,
+        content: translatedSections.map((s: any) => `${s.heading ? s.heading + '\n' : ''}${s.text}`).join('\n\n'),
+        url: pageContent.url,
+        websiteType: pageContent.websiteType,
+        extractedAt: pageContent.extractedAt,
+      };
 
       return translatedContent;
     } catch (error) {
       console.error("[LSCS] Translation Engine error:", error);
-      // Fallback to original content if translation fails
-      return pageContent;
+      // Throw error so the UI can show a notification rather than silently failing
+      throw new Error("Failed to translate the content. Please try again or check API token limits.");
     }
   }
 }
