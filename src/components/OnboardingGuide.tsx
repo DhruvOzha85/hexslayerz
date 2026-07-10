@@ -29,7 +29,7 @@ export function OnboardingGuide() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/90 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="w-[360px] overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 shadow-2xl animate-in zoom-in-95 duration-300">
+      <div className="w-[360px] overflow-hidden rounded-3xl border border-neutral-800 bg-black shadow-[0_0_50px_-12px_rgba(0,0,0,1)] animate-in zoom-in-95 duration-300">
         
         {/* Welcome Screen */}
         {step === 0 && (
@@ -49,7 +49,7 @@ export function OnboardingGuide() {
             <div className="flex w-full flex-col gap-3">
               <button
                 onClick={() => setStep(1)}
-                className="w-full rounded-lg bg-violet-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-500 active:bg-violet-700"
+                className="w-full rounded-xl bg-violet-600 py-3 text-sm font-bold text-white transition-all hover:bg-violet-500 active:scale-[0.98] shadow-lg shadow-violet-900/20"
               >
                 Start Exploring
               </button>
@@ -159,7 +159,7 @@ export function OnboardingGuide() {
               {step < 4 ? (
                 <button
                   onClick={() => setStep(step + 1)}
-                  className="flex items-center gap-1 rounded-lg bg-violet-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-500"
+                  className="flex items-center gap-1 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-violet-500 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-violet-900/20"
                 >
                   Next
                   <ChevronRight className="h-4 w-4" />
@@ -167,7 +167,7 @@ export function OnboardingGuide() {
               ) : (
                 <button
                   onClick={finishOnboarding}
-                  className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500"
+                  className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-900/20"
                 >
                   Finish
                 </button>

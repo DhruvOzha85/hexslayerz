@@ -17,10 +17,10 @@ export function Header({ activeView, setActiveView }: Props) {
   };
 
   return (
-    <div className="flex items-center justify-between pb-4">
+    <div className="flex items-center justify-between pb-5">
       <div>
-        <h1 className="text-xl font-bold text-white tracking-tight">LSCS v2</h1>
-        <p className="text-xs text-neutral-400">{subtitleMap[activeView]}</p>
+        <h1 className="text-2xl font-extrabold text-white tracking-tighter">LSCS v2</h1>
+        <p className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider mt-0.5">{subtitleMap[activeView]}</p>
       </div>
 
       <div className="flex items-center gap-2">
@@ -145,7 +145,7 @@ export function Header({ activeView, setActiveView }: Props) {
             onClick={() => createCheckpoint()}
             disabled={isLoading}
             aria-label="Extract Checkpoint"
-            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600"
+            className="rounded-lg bg-violet-600 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-violet-500 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:bg-violet-600 disabled:hover:scale-100 shadow-lg shadow-violet-900/20"
           >
             {isLoading ? "Extracting..." : "Extract Checkpoint"}
           </button>

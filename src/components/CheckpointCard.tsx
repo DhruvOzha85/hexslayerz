@@ -22,10 +22,10 @@ export const CheckpointCard = React.memo(function CheckpointCard({
   );
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition-colors hover:border-neutral-700">
+    <div className="flex flex-col gap-2 rounded-xl border border-neutral-800 bg-neutral-950 p-4 transition-all hover:border-violet-500/50 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <h3 
-          className="text-base font-semibold text-white cursor-pointer hover:text-blue-400 transition-colors"
+          className="text-base font-bold text-white cursor-pointer hover:text-violet-400 transition-colors"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {checkpoint.summary.title}
@@ -78,7 +78,7 @@ export const CheckpointCard = React.memo(function CheckpointCard({
                 window.close(); // Close extension popup to reveal the host page modal
               }
             }}
-            className="text-xs font-medium text-blue-400 hover:text-blue-300 underline"
+            className="text-xs font-semibold text-violet-400 hover:text-violet-300 underline underline-offset-2 transition-colors"
           >
             Read Full
           </button>

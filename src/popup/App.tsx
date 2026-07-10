@@ -47,7 +47,7 @@ function App() {
   }, [checkpoints, providerFilter, searchQuery, sortDirection]);
 
   return (
-    <div className="flex h-[600px] w-[400px] flex-col bg-neutral-950 p-4 font-sans text-white">
+    <div className="flex h-[600px] w-[400px] flex-col bg-black p-5 font-sans text-white tracking-tight">
       <OnboardingGuide />
       <Header activeView={activeView} setActiveView={setActiveView} />
 
