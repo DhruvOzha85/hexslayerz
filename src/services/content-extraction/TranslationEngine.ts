@@ -38,11 +38,26 @@ export class TranslationEngine {
         apiKey = settings.apiKeys.groq;
       }
 
-      // Only send title and sections to reduce tokens and avoid duplicating 'content' block
+      // Limit payload size based on provider to avoid Token limits (e.g. Groq 413 error)
+      const MAX_CHARS = providerType === AIProviderType.GROQ ? 15000 : 100000;
+      
       const payloadObj = {
         title: pageContent.title,
-        sections: pageContent.sections,
+        sections: [] as typeof pageContent.sections,
       };
+
+      let currentLength = JSON.stringify(payloadObj).length;
+      let wasTruncated = false;
+
+      for (const section of pageContent.sections) {
+        const sectionLength = JSON.stringify(section).length;
+        if (currentLength + sectionLength > MAX_CHARS) {
+          wasTruncated = true;
+          break;
+        }
+        payloadObj.sections.push(section);
+        currentLength += sectionLength;
+      }
 
       const payload = JSON.stringify(payloadObj, null, 2);
       const user = `TARGET LANGUAGE: ${targetLanguage}\n\nCONTENT TO TRANSLATE (JSON):\n${payload}`;
@@ -69,11 +84,18 @@ export class TranslationEngine {
       const translatedObj = JSON.parse(responseText);
       
       // Reconstruct the ExtractedContent
-      const translatedSections = translatedObj.sections || pageContent.sections;
+      const translatedSections = translatedObj.sections || payloadObj.sections;
+      
+      let finalContent = translatedSections.map((s: any) => `${s.heading ? s.heading + '\n' : ''}${s.text}`).join('\n\n');
+      
+      if (wasTruncated) {
+        finalContent += "\n\n[Note: The original webpage was too large and has been truncated to fit within translation token limits.]";
+      }
+
       const translatedContent: ExtractedContent = {
         title: translatedObj.title || pageContent.title,
         sections: translatedSections,
-        content: translatedSections.map((s: any) => `${s.heading ? s.heading + '\n' : ''}${s.text}`).join('\n\n'),
+        content: finalContent,
         url: pageContent.url,
         websiteType: pageContent.websiteType,
         extractedAt: pageContent.extractedAt,
