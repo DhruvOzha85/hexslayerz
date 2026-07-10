@@ -22,7 +22,7 @@ export const CheckpointCard = React.memo(function CheckpointCard({
   );
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-neutral-800 bg-neutral-950 p-4 transition-all hover:border-violet-500/50 shadow-sm">
+    <div className="flex flex-col gap-2 rounded-xl border border-neutral-800 bg-neutral-950 p-4 transition-all duration-300 hover:border-violet-500/50 shadow-sm hover:shadow-md hover:shadow-violet-900/20 hover:-translate-y-1">
       <div className="flex items-start justify-between gap-4">
         <h3 
           className="text-base font-bold text-white cursor-pointer hover:text-violet-400 transition-colors"

@@ -64,9 +64,9 @@ export function SmartModes() {
             <button
               key={mode.id}
               onClick={() => handleToggle(mode.id)}
-              className={`flex-1 min-w-[100px] flex flex-col gap-1 rounded-xl border p-2.5 text-left transition-all duration-300 ${
+              className={`flex-1 min-w-[100px] flex flex-col gap-1 rounded-xl border p-2.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg ${
                 isActive
-                  ? "border-violet-500 bg-violet-900/20 shadow-md shadow-violet-900/10 scale-[1.02]"
+                  ? "border-violet-500 bg-violet-900/20 shadow-violet-900/20 scale-[1.02]"
                   : "border-neutral-800 bg-neutral-950 hover:border-neutral-700 hover:bg-neutral-900"
               }`}
             >

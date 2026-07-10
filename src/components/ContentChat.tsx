@@ -166,7 +166,7 @@ export function ContentChat() {
           {chatMessages.map((msg) => (
             <div
               key={msg.id}
-              className={`rounded-xl px-3 py-2 text-xs leading-relaxed group relative transition-colors ${
+              className={`rounded-xl px-3 py-2 text-xs leading-relaxed group relative transition-all animate-in fade-in slide-in-from-bottom-2 duration-300 ${
                 msg.role === "user"
                   ? "ml-6 bg-violet-900/30 border border-violet-800/50 text-violet-100"
                   : "mr-6 bg-neutral-900 border border-neutral-800 text-neutral-200"
