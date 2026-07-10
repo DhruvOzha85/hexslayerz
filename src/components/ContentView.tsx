@@ -7,8 +7,16 @@ import { ScreenReaderButton } from "./ScreenReaderButton";
  * of the current page's meaningful content, with AI Q&A chat.
  */
 export function ContentView() {
-  const { extractedContent, isExtracting, error, extractContent, clearContent } =
-    useContentStore();
+  const { 
+    extractedContent, 
+    extractionHistory,
+    isExtracting, 
+    error, 
+    extractContent, 
+    clearContent,
+    loadFromHistory,
+    clearHistory
+  } = useContentStore();
 
   return (
     <div className="flex flex-col gap-4">
@@ -67,27 +75,65 @@ export function ContentView() {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State / History List */}
       {!extractedContent && !isExtracting && !error && (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <svg
-            className="mb-3 h-10 w-10 text-neutral-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-            />
-          </svg>
-          <p className="text-sm text-neutral-500">No content extracted yet</p>
-          <p className="mt-1 text-xs text-neutral-600">
-            Navigate to any webpage and click &quot;Extract&quot; to pull clean content.
-          </p>
-        </div>
+        <>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <svg
+              className="mb-3 h-10 w-10 text-neutral-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+              />
+            </svg>
+            <p className="text-sm text-neutral-500">No content extracted yet</p>
+            <p className="mt-1 text-xs text-neutral-600">
+              Navigate to any webpage and click &quot;Extract&quot; to pull clean content.
+            </p>
+          </div>
+
+          {/* History Section */}
+          {extractionHistory.length > 0 && (
+            <div className="mt-4 border-t border-neutral-800 pt-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-neutral-300">Recent Extractions</h3>
+                <button
+                  onClick={clearHistory}
+                  className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+                >
+                  Clear History
+                </button>
+              </div>
+              <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                {extractionHistory.map((historyItem, idx) => (
+                  <div
+                    key={historyItem.extractedAt + idx}
+                    onClick={() => loadFromHistory(idx)}
+                    className="cursor-pointer rounded-lg border border-neutral-800 bg-neutral-900/50 p-3 transition-colors hover:bg-neutral-800"
+                  >
+                    <h4 className="text-sm font-medium text-white truncate">
+                      {historyItem.title}
+                    </h4>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <span className="rounded bg-emerald-900/50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400 uppercase tracking-wider">
+                        {historyItem.websiteType}
+                      </span>
+                      <span className="text-[10px] text-neutral-500">
+                        {new Date(historyItem.extractedAt).toLocaleTimeString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Extracted Content */}

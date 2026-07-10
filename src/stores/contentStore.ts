@@ -1,18 +1,25 @@
 // LSCS v2 — Content Extraction Store
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { ApplicationService } from "../services";
 import type { ExtractedContent, QAMessage } from "../services";
 
 interface ContentState {
   /** The extracted content result, or null if nothing extracted yet */
   extractedContent: ExtractedContent | null;
+  /** History of extractions during this session */
+  extractionHistory: ExtractedContent[];
   /** Whether an extraction is currently in progress */
   isExtracting: boolean;
   /** Error message from the last failed extraction */
   error: string | null;
   /** Triggers content extraction for the current active tab */
   extractContent: () => Promise<void>;
-  /** Clears extracted content and resets state */
+  /** Load a previous extraction from history */
+  loadFromHistory: (index: number) => void;
+  /** Clear the extraction history */
+  clearHistory: () => void;
+  /** Clears active extracted content and resets state */
   clearContent: () => void;
 
   // --- Q&A Chat ---
@@ -36,95 +43,125 @@ interface ContentState {
   setLastSpokenMessage: (msg: string | null) => void;
 }
 
-export const useContentStore = create<ContentState>((set, get) => ({
-  extractedContent: null,
-  isExtracting: false,
-  error: null,
-  chatMessages: [],
-  isAsking: false,
-  readingProgress: 0,
-  lastSpokenMessage: null,
-
-  setReadingProgress: (index) => set({ readingProgress: index }),
-  setLastSpokenMessage: (msg) => set({ lastSpokenMessage: msg }),
-
-  extractContent: async () => {
-    set({ isExtracting: true, error: null });
-    try {
-      const content = await ApplicationService.extractPageContent();
-      set({ extractedContent: content, isExtracting: false, chatMessages: [] });
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Content could not be extracted clearly from this page.";
-      set({ error: message, isExtracting: false, extractedContent: null });
-    }
-  },
-
-  clearContent: () => {
-    set({
+export const useContentStore = create<ContentState>()(
+  persist(
+    (set, get) => ({
       extractedContent: null,
-      error: null,
+      extractionHistory: [],
       isExtracting: false,
+      error: null,
       chatMessages: [],
       isAsking: false,
-    });
-  },
+      readingProgress: 0,
+      lastSpokenMessage: null,
 
-  askQuestion: async (question: string) => {
-    const { extractedContent } = get();
-    if (!extractedContent || !question.trim()) return;
+      setReadingProgress: (index) => set({ readingProgress: index }),
+      setLastSpokenMessage: (msg) => set({ lastSpokenMessage: msg }),
 
-    // Add user message
-    const userMsg: QAMessage = {
-      id: `msg-${Date.now()}-user`,
-      role: "user",
-      content: question.trim(),
-      timestamp: Date.now(),
-    };
+      extractContent: async () => {
+        set({ isExtracting: true, error: null });
+        try {
+          const content = await ApplicationService.extractPageContent();
+          set((state) => ({ 
+            extractedContent: content, 
+            extractionHistory: [content, ...state.extractionHistory],
+            isExtracting: false, 
+            chatMessages: [] 
+          }));
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Content could not be extracted clearly from this page.";
+          set({ error: message, isExtracting: false, extractedContent: null });
+        }
+      },
 
-    set((state) => ({
-      chatMessages: [...state.chatMessages, userMsg],
-      isAsking: true,
-    }));
+      loadFromHistory: (index: number) => {
+        const { extractionHistory } = get();
+        const content = extractionHistory[index];
+        if (content) {
+          set({
+            extractedContent: content,
+            chatMessages: [],
+            error: null,
+          });
+        }
+      },
 
-    try {
-      const answer = await ApplicationService.askPageQuestion(
-        question.trim(),
-        extractedContent,
-      );
+      clearHistory: () => {
+        set({ extractionHistory: [] });
+      },
 
-      const assistantMsg: QAMessage = {
-        id: `msg-${Date.now()}-ai`,
-        role: "assistant",
-        content: answer,
-        timestamp: Date.now(),
-      };
+      clearContent: () => {
+        set({
+          extractedContent: null,
+          error: null,
+          isExtracting: false,
+          chatMessages: [],
+          isAsking: false,
+        });
+      },
 
-      set((state) => ({
-        chatMessages: [...state.chatMessages, assistantMsg],
-        isAsking: false,
-      }));
-    } catch (error) {
-      const errorMsg: QAMessage = {
-        id: `msg-${Date.now()}-error`,
-        role: "assistant",
-        content:
-          error instanceof Error
-            ? `⚠️ ${error.message}`
-            : "⚠️ Failed to get an answer. Check your API key in Settings.",
-        timestamp: Date.now(),
-      };
+      askQuestion: async (question: string) => {
+        const { extractedContent } = get();
+        if (!extractedContent || !question.trim()) return;
 
-      set((state) => ({
-        chatMessages: [...state.chatMessages, errorMsg],
-        isAsking: false,
-      }));
+        // Add user message
+        const userMsg: QAMessage = {
+          id: `msg-${Date.now()}-user`,
+          role: "user",
+          content: question.trim(),
+          timestamp: Date.now(),
+        };
+
+        set((state) => ({
+          chatMessages: [...state.chatMessages, userMsg],
+          isAsking: true,
+        }));
+
+        try {
+          const answer = await ApplicationService.askPageQuestion(
+            question.trim(),
+            extractedContent,
+          );
+
+          const assistantMsg: QAMessage = {
+            id: `msg-${Date.now()}-ai`,
+            role: "assistant",
+            content: answer,
+            timestamp: Date.now(),
+          };
+
+          set((state) => ({
+            chatMessages: [...state.chatMessages, assistantMsg],
+            isAsking: false,
+          }));
+        } catch (error) {
+          const errorMsg: QAMessage = {
+            id: `msg-${Date.now()}-error`,
+            role: "assistant",
+            content:
+              error instanceof Error
+                ? `⚠️ ${error.message}`
+                : "⚠️ Failed to get an answer. Check your API key in Settings.",
+            timestamp: Date.now(),
+          };
+
+          set((state) => ({
+            chatMessages: [...state.chatMessages, errorMsg],
+            isAsking: false,
+          }));
+        }
+      },
+
+      clearChat: () => {
+        set({ chatMessages: [], isAsking: false });
+      },
+    }),
+    {
+      name: "lscs-content-storage",
+      partialize: (state) => ({ extractionHistory: state.extractionHistory }),
     }
-  },
-
-  clearChat: () => {
-    set({ chatMessages: [], isAsking: false });
-  },
-}));
+  )
+);
