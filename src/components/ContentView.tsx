@@ -2,6 +2,15 @@ import { useContentStore } from "../stores";
 import { TabService } from "../services/chrome/TabService";
 import { ContentChat } from "./ContentChat";
 import { ScreenReaderButton } from "./ScreenReaderButton";
+import { Sparkles, FileSearch } from "lucide-react";
+
+const SUGGESTIONS = [
+  "📄 Summarize Page",
+  "🧒 Explain Like I'm 10",
+  "⭐ Key Takeaways",
+  "❓ Quiz Me",
+  "📝 TL;DR",
+];
 
 /**
  * Content extraction view — displays a clean, structured extraction
@@ -16,7 +25,8 @@ export function ContentView() {
     extractContent, 
     clearContent,
     loadFromHistory,
-    clearHistory
+    clearHistory,
+    askQuestion
   } = useContentStore();
 
   return (
@@ -27,7 +37,7 @@ export function ContentView() {
           onClick={extractContent}
           disabled={isExtracting}
           id="extract-content-btn"
-          className="flex-1 rounded bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 disabled:hover:bg-emerald-600"
+          className="flex-1 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition-all shadow-lg shadow-emerald-900/20 hover:bg-emerald-500 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:bg-emerald-600 disabled:hover:scale-100"
         >
           {isExtracting ? (
             <span className="flex items-center justify-center gap-2">
@@ -60,7 +70,7 @@ export function ContentView() {
         {extractedContent && (
           <button
             onClick={clearContent}
-            className="rounded border border-neutral-700 px-3 py-2 text-sm text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white"
+            className="rounded-xl border border-neutral-700 px-4 py-2.5 text-sm font-medium text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white"
             title="Clear extracted content"
           >
             Clear
@@ -79,29 +89,28 @@ export function ContentView() {
       {/* Empty State / History List */}
       {!extractedContent && !isExtracting && !error && (
         <>
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <svg
-              className="mb-3 h-10 w-10 text-neutral-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-              />
-            </svg>
-            <p className="text-sm text-neutral-500">No content extracted yet</p>
-            <p className="mt-1 text-xs text-neutral-600">
-              Navigate to any webpage and click &quot;Extract&quot; to pull clean content.
+          <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in zoom-in-95 duration-300">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-violet-600/10 text-violet-400 ring-4 ring-violet-500/5">
+              <Sparkles className="h-8 w-8" />
+            </div>
+            <h2 className="mb-2 text-lg font-bold text-white">
+              Ready to understand this page?
+            </h2>
+            <p className="mb-6 text-sm text-neutral-400 max-w-[240px]">
+              Click the button below and I'll analyze the current webpage for you.
             </p>
+            <button
+              onClick={extractContent}
+              className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-violet-900/30 transition-all hover:bg-violet-500 hover:scale-[1.05] active:scale-[0.95]"
+            >
+              <FileSearch className="h-4 w-4" />
+              Extract Page Content
+            </button>
           </div>
 
           {/* History Section */}
           {extractionHistory.length > 0 && (
-            <div className="mt-4 border-t border-neutral-800 pt-4">
+            <div className="mt-4 border-t border-neutral-800 pt-4 animate-in fade-in">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-neutral-300">Recent Extractions</h3>
                 <button
@@ -116,7 +125,7 @@ export function ContentView() {
                   <div
                     key={historyItem.extractedAt + idx}
                     onClick={() => loadFromHistory(idx)}
-                    className="cursor-pointer rounded-lg border border-neutral-800 bg-neutral-900/50 p-3 transition-colors hover:bg-neutral-800"
+                    className="cursor-pointer rounded-xl border border-neutral-800 bg-neutral-950 p-3 transition-colors hover:border-violet-500/50 hover:bg-neutral-900"
                   >
                     <h4 className="text-sm font-medium text-white truncate">
                       {historyItem.title}
@@ -141,7 +150,7 @@ export function ContentView() {
       {extractedContent && (
         <div className="flex flex-col gap-3">
           {/* Title */}
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-3">
+          <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm">
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-base font-bold text-white leading-tight">
                 {extractedContent.title}
@@ -158,7 +167,7 @@ export function ContentView() {
                     window.close(); // Close extension popup to reveal the host page modal
                   }
                 }}
-                className="shrink-0 flex items-center gap-1.5 rounded bg-blue-600/20 px-2.5 py-1.5 text-xs font-semibold text-blue-400 transition-colors hover:bg-blue-600/30 hover:text-blue-300"
+                className="shrink-0 flex items-center gap-1.5 rounded-lg bg-violet-600/20 px-3 py-1.5 text-xs font-bold text-violet-400 transition-all hover:bg-violet-600 hover:text-white"
                 title="Read in Full Screen on the Webpage"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,7 +195,7 @@ export function ContentView() {
             extractedContent.sections.map((section, idx) => (
               <div
                 key={idx}
-                className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-3"
+                className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm"
               >
                 {section.heading && (
                   <h3 className="mb-1.5 text-sm font-semibold text-neutral-200">
@@ -204,7 +213,7 @@ export function ContentView() {
             ))
           ) : (
             /* Full text fallback if no sections were parsed */
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-3">
+            <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm">
               <p className="text-xs leading-relaxed text-neutral-400 whitespace-pre-wrap">
                 {extractedContent.content.length > 2000
                   ? `${extractedContent.content.slice(0, 2000)}…`
@@ -212,6 +221,19 @@ export function ContentView() {
               </p>
             </div>
           )}
+
+          {/* AI Suggestions */}
+          <div className="my-1 flex flex-wrap gap-1.5">
+            {SUGGESTIONS.map((suggestion, idx) => (
+              <button
+                key={idx}
+                onClick={() => askQuestion(suggestion)}
+                className="rounded-full border border-neutral-700 bg-neutral-800/50 px-2.5 py-1 text-[10px] font-medium text-neutral-300 transition-colors hover:bg-violet-900/30 hover:text-violet-300 hover:border-violet-700/50"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
 
           {/* AI Q&A Chat */}
           <ContentChat />

@@ -13,5 +13,6 @@ export const DEFAULT_SETTINGS: LscssSettings = {
   speechVolume: 1.0,
   voiceURI: undefined,
   handsFreeMode: false,
+  extractionLanguage: "Original",
   apiKeys: {},
 };

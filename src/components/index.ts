@@ -8,3 +8,4 @@ export * from "./ErrorBoundary";
 export * from "./ContentView";
 export * from "./ContentChat";
 export * from "./ScreenReaderButton";
+export * from "./OnboardingGuide";

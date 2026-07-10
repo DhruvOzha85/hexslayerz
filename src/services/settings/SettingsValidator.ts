@@ -54,6 +54,10 @@ export class SettingsValidator {
         typeof input.handsFreeMode === "boolean"
           ? input.handsFreeMode
           : DEFAULT_SETTINGS.handsFreeMode,
+      extractionLanguage:
+        typeof input.extractionLanguage === "string"
+          ? input.extractionLanguage
+          : DEFAULT_SETTINGS.extractionLanguage,
       apiKeys: {
         gemini:
           typeof input.apiKeys?.gemini === "string"

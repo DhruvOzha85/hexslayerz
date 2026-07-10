@@ -11,6 +11,9 @@ import { ContentSerializer } from "../services/content-extraction";
 
 console.log("[LSCS] Content script loaded on:", window.location.href);
 
+// Global Speech Recognition instance
+let recognition: any = null;
+
 chrome.runtime.onMessage.addListener(
   (
     request: RuntimeRequest,
@@ -78,6 +81,68 @@ chrome.runtime.onMessage.addListener(
       }
       
       sendResponse({ success: true, data: rawText.trim() });
+    } else if (request.type === RuntimeMessageTypes.START_SPEECH_RECOGNITION) {
+      console.log("[LSCS] Starting speech recognition in content script...");
+      
+      if (!recognition) {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          sendResponse({ success: false, error: "Speech recognition not supported" });
+          return false;
+        }
+        
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+        
+        recognition.onstart = () => {
+          chrome.runtime.sendMessage({ type: RuntimeMessageTypes.SPEECH_RECOGNITION_RESULT, payload: { isListening: true, transcript: "", error: null } });
+        };
+        
+        recognition.onresult = (event: any) => {
+          let finalTranscript = "";
+          let interimTranscript = "";
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
+          }
+          
+          chrome.runtime.sendMessage({ 
+            type: RuntimeMessageTypes.SPEECH_RECOGNITION_RESULT, 
+            payload: { isListening: true, transcript: finalTranscript + interimTranscript, error: null } 
+          });
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.error("[LSCS] SpeechRecognition Error:", event.error);
+          chrome.runtime.sendMessage({ 
+            type: RuntimeMessageTypes.SPEECH_RECOGNITION_ERROR, 
+            payload: { isListening: false, transcript: "", error: event.error } 
+          });
+        };
+        
+        recognition.onend = () => {
+          chrome.runtime.sendMessage({ type: RuntimeMessageTypes.SPEECH_RECOGNITION_END, payload: { isListening: false } });
+        };
+      }
+      
+      try {
+        recognition.start();
+        sendResponse({ success: true });
+      } catch (e: any) {
+        console.warn("[LSCS] Speech recognition already started", e);
+        sendResponse({ success: true }); // Ignore if already started
+      }
+    } else if (request.type === RuntimeMessageTypes.STOP_SPEECH_RECOGNITION) {
+      if (recognition) {
+        recognition.stop();
+      }
+      sendResponse({ success: true });
     }
 
     // Return false for synchronous response, since detect(), extract(), and serialize() are synchronous.

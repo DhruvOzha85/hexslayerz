@@ -16,7 +16,7 @@ export function ContentChat() {
   const [isPaused, setIsPaused] = useState(false);
   
   // Custom Voice Hooks (abstracts STT, TTS, Commands, Hands-Free mode)
-  const { isListening, transcript, speechError, needsPermission, startListening, stopListening } = useVoiceChat();
+  const { isListening, transcript, speechError, startListening, stopListening } = useVoiceChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,7 +64,7 @@ export function ContentChat() {
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-violet-900/30 bg-violet-950/20 p-3 relative transition-all">
+    <div className="flex flex-col gap-2 rounded-xl border border-neutral-800 bg-neutral-950 p-4 relative transition-all shadow-sm">
       {/* Playback Controls Overlay (appears when speaking) */}
       {(isSpeaking || isPaused) && (
         <div className="absolute top-2 right-14 z-10 flex items-center gap-2 bg-neutral-900/90 backdrop-blur border border-neutral-700 rounded-full px-2 py-1 shadow-lg animate-in fade-in zoom-in-95">
@@ -157,20 +157,6 @@ export function ContentChat() {
       {speechError && (
         <div className="text-[10px] text-red-400 bg-red-950/30 p-2 rounded animate-in slide-in-from-top-1 border border-red-900/50 flex flex-col gap-1.5">
           <span>{speechError}</span>
-          {needsPermission && (
-            <button
-              onClick={() => {
-                if (chrome?.runtime?.getURL) {
-                  chrome.tabs.create({ url: chrome.runtime.getURL("permissions.html") });
-                } else {
-                  window.open("/permissions.html", "_blank");
-                }
-              }}
-              className="w-fit bg-red-900/50 hover:bg-red-800/60 text-red-200 px-2 py-1 rounded text-[10px] transition-colors font-medium border border-red-800/50"
-            >
-              Click here to grant permission
-            </button>
-          )}
         </div>
       )}
 
@@ -180,10 +166,10 @@ export function ContentChat() {
           {chatMessages.map((msg) => (
             <div
               key={msg.id}
-              className={`rounded-md px-2.5 py-2 text-xs leading-relaxed group relative transition-colors ${
+              className={`rounded-xl px-3 py-2 text-xs leading-relaxed group relative transition-colors ${
                 msg.role === "user"
-                  ? "ml-6 bg-violet-900/40 text-violet-200"
-                  : "mr-6 bg-neutral-800/70 text-neutral-300"
+                  ? "ml-6 bg-violet-900/30 border border-violet-800/50 text-violet-100"
+                  : "mr-6 bg-neutral-900 border border-neutral-800 text-neutral-200"
               }`}
             >
               <div className="flex items-center justify-between mb-0.5">
@@ -263,14 +249,14 @@ export function ContentChat() {
           placeholder={isListening ? "Listening (Say 'Stop reading')..." : "Ask a question..."}
           disabled={isAsking || isListening}
           id="qa-input"
-          className="flex-1 min-w-0 rounded border border-neutral-700 bg-neutral-900 px-2.5 py-1.5 text-xs text-white placeholder-neutral-500 focus:border-violet-600 focus:outline-none transition-colors disabled:opacity-50"
+          className="flex-1 min-w-0 rounded-lg border border-neutral-800 bg-black px-3 py-2 text-xs text-white placeholder-neutral-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none transition-all disabled:opacity-50"
         />
         
         <button
           type="submit"
           disabled={isAsking || !input.trim()}
           id="qa-send-btn"
-          className="rounded bg-violet-600 px-2.5 py-1.5 text-xs font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-40 disabled:hover:bg-violet-600"
+          className="rounded-lg bg-violet-600 px-3 py-2 text-xs font-bold text-white transition-all hover:bg-violet-500 disabled:opacity-40 disabled:hover:bg-violet-600 shadow-lg shadow-violet-900/20"
         >
           {isAsking ? (
             <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">

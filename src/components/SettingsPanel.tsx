@@ -41,7 +41,7 @@ export function SettingsPanel() {
 
   return (
     <div className="flex flex-col gap-6 p-1">
-      <div className="flex flex-col gap-4 rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+      <div className="flex flex-col gap-4 rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-white">General</h2>
 
         <div className="flex flex-col gap-2">
@@ -56,7 +56,7 @@ export function SettingsPanel() {
                 defaultProvider: e.target.value as AIProviderType,
               })
             }
-            className="rounded bg-neutral-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+            className="rounded-lg bg-black px-3 py-2 text-sm text-white border border-neutral-800 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50 transition-all"
           >
             {Object.values(AIProviderType).map((p) => (
               <option key={p} value={p}>
@@ -76,11 +76,35 @@ export function SettingsPanel() {
                 theme: e.target.value as "dark" | "light" | "system",
               })
             }
-            className="rounded bg-neutral-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+            className="rounded-lg bg-black px-3 py-2 text-sm text-white border border-neutral-800 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50 transition-all"
           >
             <option value="dark">Dark</option>
             <option value="light">Light</option>
             <option value="system">System Default</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-xs text-neutral-400">
+            Preferred Content Language
+          </label>
+          <select
+            disabled={isLoading}
+            value={settings.extractionLanguage || "Original"}
+            onChange={(e) =>
+              updateSettings({
+                extractionLanguage: e.target.value,
+              })
+            }
+            className="rounded-lg bg-black px-3 py-2 text-sm text-white border border-neutral-800 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50 transition-all"
+          >
+            <option value="Original">Original (No Translation)</option>
+            <option value="English">English</option>
+            <option value="Hindi">Hindi (हिंदी)</option>
+            <option value="Marathi">Marathi (मराठी)</option>
+            <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+            <option value="Spanish">Spanish (Español)</option>
+            <option value="French">French (Français)</option>
           </select>
         </div>
 
@@ -97,12 +121,12 @@ export function SettingsPanel() {
             }
             min={100}
             step={100}
-            className="rounded bg-neutral-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+            className="rounded-lg bg-black px-3 py-2 text-sm text-white border border-neutral-800 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50 transition-all"
           />
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+      <div className="flex flex-col gap-4 rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-white">Advanced</h2>
 
         <label className="flex items-center justify-between gap-4 cursor-pointer">
@@ -116,7 +140,7 @@ export function SettingsPanel() {
             onChange={(e) =>
               updateSettings({ requireConfirmation: e.target.checked })
             }
-            className="h-4 w-4 rounded border-neutral-700 bg-neutral-950 text-blue-600 focus:ring-blue-600 focus:ring-offset-neutral-900 disabled:opacity-50"
+            className="h-4 w-4 rounded border-neutral-700 bg-black text-violet-600 focus:ring-violet-600 focus:ring-offset-neutral-900 disabled:opacity-50"
           />
         </label>
 
@@ -131,7 +155,7 @@ export function SettingsPanel() {
             onChange={(e) =>
               updateSettings({ autoCreateCheckpoints: e.target.checked })
             }
-            className="h-4 w-4 rounded border-neutral-700 bg-neutral-950 text-blue-600 focus:ring-blue-600 focus:ring-offset-neutral-900 disabled:opacity-50"
+            className="h-4 w-4 rounded border-neutral-700 bg-black text-violet-600 focus:ring-violet-600 focus:ring-offset-neutral-900 disabled:opacity-50"
           />
         </label>
 
@@ -146,7 +170,7 @@ export function SettingsPanel() {
             onChange={(e) =>
               updateSettings({ autoReadResponses: e.target.checked })
             }
-            className="h-4 w-4 rounded border-neutral-700 bg-neutral-950 text-blue-600 focus:ring-blue-600 focus:ring-offset-neutral-900 disabled:opacity-50"
+            className="h-4 w-4 rounded border-neutral-700 bg-black text-violet-600 focus:ring-violet-600 focus:ring-offset-neutral-900 disabled:opacity-50"
           />
         </label>
         
@@ -159,7 +183,7 @@ export function SettingsPanel() {
               onChange={(e) =>
                 updateSettings({ voiceURI: e.target.value })
               }
-              className="flex-1 rounded bg-neutral-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+              className="flex-1 rounded-lg bg-black px-3 py-2 text-sm text-white border border-neutral-800 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50 transition-all"
             >
               <option value="">System Default</option>
               {voices.map((voice) => (
@@ -180,7 +204,7 @@ export function SettingsPanel() {
                 utterance.volume = settings.speechVolume ?? 1.0;
                 window.speechSynthesis.speak(utterance);
               }}
-              className="rounded bg-neutral-800 px-3 py-2 text-xs font-semibold text-white hover:bg-neutral-700 transition-colors"
+              className="rounded-lg bg-violet-600 px-3 py-2 text-xs font-bold text-white hover:bg-violet-500 transition-colors shadow-lg shadow-violet-900/20"
             >
               Test
             </button>
@@ -195,7 +219,7 @@ export function SettingsPanel() {
             onChange={(e) =>
               updateSettings({ speechSpeed: parseFloat(e.target.value) })
             }
-            className="rounded bg-neutral-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+            className="rounded-lg bg-black px-3 py-2 text-sm text-white border border-neutral-800 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50 transition-all"
           >
             <option value="0.75">Slow (0.75x)</option>
             <option value="1.0">Normal (1.0x)</option>
@@ -220,7 +244,7 @@ export function SettingsPanel() {
             onChange={(e) =>
               updateSettings({ speechPitch: parseFloat(e.target.value) })
             }
-            className="w-full accent-blue-600"
+            className="w-full accent-violet-600"
           />
         </div>
 
@@ -239,7 +263,7 @@ export function SettingsPanel() {
             onChange={(e) =>
               updateSettings({ speechVolume: parseFloat(e.target.value) })
             }
-            className="w-full accent-blue-600"
+            className="w-full accent-violet-600"
           />
         </div>
 
@@ -254,12 +278,12 @@ export function SettingsPanel() {
             onChange={(e) =>
               updateSettings({ handsFreeMode: e.target.checked })
             }
-            className="h-4 w-4 rounded border-neutral-700 bg-neutral-950 text-blue-600 focus:ring-blue-600 focus:ring-offset-neutral-900 disabled:opacity-50"
+            className="h-4 w-4 rounded border-neutral-700 bg-black text-violet-600 focus:ring-violet-600 focus:ring-offset-neutral-900 disabled:opacity-50"
           />
         </label>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+      <div className="flex flex-col gap-4 rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-white">API Keys</h2>
 
         <div className="flex flex-col gap-2">
@@ -276,7 +300,7 @@ export function SettingsPanel() {
                 apiKeys: { ...settings.apiKeys, gemini: e.target.value },
               })
             }
-            className="rounded bg-neutral-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+            className="rounded-lg bg-black px-3 py-2 text-sm text-white border border-neutral-800 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50 transition-all"
           />
         </div>
 
@@ -294,12 +318,12 @@ export function SettingsPanel() {
                 apiKeys: { ...settings.apiKeys, groq: e.target.value },
               })
             }
-            className="rounded bg-neutral-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+            className="rounded-lg bg-black px-3 py-2 text-sm text-white border border-neutral-800 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50 transition-all"
           />
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+      <div className="flex flex-col gap-4 rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-white">Data Management</h2>
 
         <div className="flex flex-col gap-3">
