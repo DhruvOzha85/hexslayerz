@@ -8,7 +8,7 @@ export function useVoiceChat() {
   const { chatMessages, isAsking, askQuestion, setLastSpokenMessage, lastSpokenMessage } = useContentStore();
   const { settings } = useSettingsStore();
   
-  const { isListening, transcript, startListening, stopListening, error: speechError, resetTranscript } = useSpeechRecognition();
+  const { isListening, transcript, startListening, stopListening, error: speechError, needsPermission, resetTranscript } = useSpeechRecognition();
   const { startReading, stopReading, pauseReading, resumeReading } = usePageReader();
 
   // Watch for AI responses to speak them automatically (and handle Hands-Free mode)
@@ -94,6 +94,7 @@ export function useVoiceChat() {
     isListening,
     transcript,
     speechError,
+    needsPermission,
     startListening,
     stopListening,
     resetTranscript,

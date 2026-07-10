@@ -16,7 +16,7 @@ export function ContentChat() {
   const [isPaused, setIsPaused] = useState(false);
   
   // Custom Voice Hooks (abstracts STT, TTS, Commands, Hands-Free mode)
-  const { isListening, transcript, speechError, startListening, stopListening } = useVoiceChat();
+  const { isListening, transcript, speechError, needsPermission, startListening, stopListening } = useVoiceChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -155,8 +155,22 @@ export function ContentChat() {
 
       {/* Error Banner */}
       {speechError && (
-        <div className="text-[10px] text-red-400 bg-red-950/30 p-1.5 rounded animate-in slide-in-from-top-1">
-          {speechError}
+        <div className="text-[10px] text-red-400 bg-red-950/30 p-2 rounded animate-in slide-in-from-top-1 border border-red-900/50 flex flex-col gap-1.5">
+          <span>{speechError}</span>
+          {needsPermission && (
+            <button
+              onClick={() => {
+                if (chrome?.runtime?.getURL) {
+                  chrome.tabs.create({ url: chrome.runtime.getURL("permissions.html") });
+                } else {
+                  window.open("/permissions.html", "_blank");
+                }
+              }}
+              className="w-fit bg-red-900/50 hover:bg-red-800/60 text-red-200 px-2 py-1 rounded text-[10px] transition-colors font-medium border border-red-800/50"
+            >
+              Click here to grant permission
+            </button>
+          )}
         </div>
       )}
 

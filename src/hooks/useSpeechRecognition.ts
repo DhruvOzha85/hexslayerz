@@ -12,6 +12,7 @@ export function useSpeechRecognition() {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [needsPermission, setNeedsPermission] = useState(false);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -53,8 +54,10 @@ export function useSpeechRecognition() {
       console.error("[SpeechRecognition] Error:", event.error);
       if (event.error === "not-allowed") {
         setError("Microphone access denied. Please grant permission.");
+        setNeedsPermission(true);
       } else {
         setError(`Speech recognition error: ${event.error}`);
+        setNeedsPermission(false);
       }
       setIsListening(false);
     };
@@ -97,6 +100,7 @@ export function useSpeechRecognition() {
     isListening,
     transcript,
     error,
+    needsPermission,
     startListening,
     stopListening,
     resetTranscript,
