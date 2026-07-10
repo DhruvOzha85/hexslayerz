@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src=".github/assets/banner.svg" alt="LSCS v2 banner" width="100%" />
+<img src=".github/assets/banner.svg" alt="Context(AI) banner" width="100%" />
 
-### 🧠 Local Summarization &amp; Checkpoint System — a Chrome extension that reads, remembers, and talks back.
+### 🧠 Context(AI) — a Chrome extension that reads, remembers, and talks back.
 
 <p>
   <img src="https://img.shields.io/badge/status-active--development-3b82f6?style=for-the-badge" alt="status"/>
@@ -26,19 +26,21 @@
 <br/>
 
 > [!NOTE]
-> This repository (`hexslayerz`) ships the **LSCS v2** Chrome Extension — a from-scratch rewrite that replaces a loose script with a strict, layered, Domain-Driven-Design codebase. Nothing here talks directly to `chrome.*` except two files. Everything else is pure, typed, testable domain logic.
+> This repository ships the **Context(AI)** Chrome Extension (formerly LSCS) — a strict, layered, Domain-Driven-Design codebase. The extension source code lives entirely within the `Extension` directory.
 
 <br/>
 
 ## 📖 Overview
 
-**LSCS v2** sits quietly in your Chrome toolbar and does three jobs extremely well:
+**Context(AI)** sits quietly in your Chrome toolbar and does three jobs extremely well:
 
 1. **It watches your ChatGPT conversations** and, on demand, extracts them straight out of the DOM — no copy-pasting, no screenshots.
 2. **It hands that conversation to an AI provider** (Google Gemini or Groq's `llama-3.3-70b-versatile`, today) and gets back a structured, validated summary.
 3. **It seals the result into an immutable *Checkpoint*** — a timestamped, searchable, exportable snapshot you can recall weeks later without re-reading a 400-message thread.
 
-But conversation checkpointing is only half the extension. LSCS v2 also ships a **general-purpose page reader**: point it at *any* webpage or local PDF, and it will extract clean structured content, classify the site (Wikipedia / GitHub / docs / blog / generic), let you **chat with the page** via an AI Q&A engine, and **read it aloud** with a full text-to-speech pipeline — including hands-free, voice-command-driven navigation ("read this page", "summarize this page", "pause", "repeat"...).
+But conversation checkpointing is only half the extension. Context(AI) also ships a **general-purpose page reader**: point it at *any* webpage or local PDF, and it will extract clean structured content, classify the site (Wikipedia / GitHub / docs / blog / generic), let you **chat with the page** via an AI Q&A engine, and **read it aloud** with a full text-to-speech pipeline — including hands-free, voice-command-driven navigation ("read this page", "summarize this page", "pause", "repeat"...).
+
+Recent updates include **Smart AI Modes** (Student, Research, Quick Summary) to guide the assistant, and a highly animated, premium UI experience.
 
 <div align="center">
 <sub>Popup UI mockups below are generated directly from this repo's real Tailwind design tokens and component layout — see <a href="#-live-in-the-popup">Live in the Popup</a>.</sub>
@@ -49,7 +51,7 @@ But conversation checkpointing is only half the extension. LSCS v2 also ships a 
 ## 🎬 Live in the Popup
 
 <div align="center">
-<img src=".github/assets/demo.svg" alt="LSCS v2 popup walkthrough animation" width="380"/>
+<img src=".github/assets/demo.svg" alt="Context(AI) popup walkthrough animation" width="380"/>
 <br/>
 <sub>Checkpoint Manager → Content Extractor → Settings, cycling automatically</sub>
 </div>
@@ -57,7 +59,7 @@ But conversation checkpointing is only half the extension. LSCS v2 also ships a 
 <br/>
 
 <div align="center">
-<img src=".github/assets/screenshots_strip.svg" alt="LSCS v2 three panel screenshots: checkpoints, content extractor, settings" width="100%"/>
+<img src=".github/assets/screenshots_strip.svg" alt="Context(AI) three panel screenshots: checkpoints, content extractor, settings" width="100%"/>
 </div>
 
 <table>
@@ -101,6 +103,7 @@ Provider selection, theme, summary length, confirmation dialogs, full voice tuni
 | | Website classifier (Wikipedia / GitHub / Docs / Blog / Generic) | ✅ |
 | | **PDF text extraction** via `pdf.js`, page-by-page, with metadata title | ✅ |
 | | **Q&A Engine** — ask questions grounded strictly in extracted page content | ✅ |
+| | **Smart AI Modes** — tailored modes (Student, Research, Summary) | ✅ |
 | **Voice & Accessibility** | Text-to-speech reader with rate / pitch / volume / voice selection | ✅ |
 | | Section-by-section page reading with resumable progress | ✅ |
 | | Voice command parser (`read this page`, `pause`, `resume`, `repeat`, …) | ✅ |
@@ -114,7 +117,7 @@ Provider selection, theme, summary length, confirmation dialogs, full voice tuni
 
 ## 🏗 Architecture
 
-LSCS v2 enforces an intentionally rigid, **strictly unidirectional** architecture. React components render state and dispatch intents — nothing more. Every side effect, validation, and transformation lives in a single-responsibility service.
+Context(AI) enforces an intentionally rigid, **strictly unidirectional** architecture. React components render state and dispatch intents — nothing more. Every side effect, validation, and transformation lives in a single-responsibility service.
 
 ```mermaid
 flowchart LR
@@ -200,29 +203,32 @@ flowchart TB
 ## 📁 Project Structure
 
 ```text
-src/
-├── background/                 # Chrome service worker & message router
-│   ├── handlers/                #   one handler per RuntimeMessageType
-│   └── router.ts                #   dispatch table (type → handler)
-├── content/                    # Injected content script (DOM access on <all_urls>)
-├── popup/                      # Extension popup entry (App.tsx, main.tsx)
-├── components/                 # Presentational React components — zero business logic
-├── hooks/                      # useVoiceChat, usePageReader, useSpeechRecognition, …
-├── stores/                     # Zustand: checkpointStore · contentStore · settingsStore
-├── services/                   # 🧠 THE DOMAIN LAYER
-│   ├── application/              #   ApplicationService — the only facade the UI may call
-│   ├── conversation/              #   Detect → Extract → Clean → Serialize (ChatGPT)
-│   ├── content-extraction/        #   Generic page/PDF extraction, classification, Q&A
-│   ├── ai/                        #   Prompt building, provider factory, validation
-│   │   └── providers/                #   GeminiProvider · GroqProvider · StubProvider
-│   ├── checkpoint/                #   Build, validate, store, search, filter, recall
-│   ├── settings/                  #   Typed settings model + validated persistence
-│   ├── data/                      #   Export / Import / Backup / Restore / Migration
-│   ├── voice/                     #   SpeechSynthesisService, VoiceCommandParser
-│   ├── chrome/                    #   The ONLY layer allowed to call chrome.* directly
-│   └── runtime/                   #   Typed message contracts between popup ⇄ background ⇄ content
-├── constants/ · types/ · utils/  # Shared, app-wide primitives
-└── assets/
+Extension/
+├── src/
+│   ├── background/                 # Chrome service worker & message router
+│   │   ├── handlers/                #   one handler per RuntimeMessageType
+│   │   └── router.ts                #   dispatch table (type → handler)
+│   ├── content/                    # Injected content script (DOM access on <all_urls>)
+│   ├── popup/                      # Extension popup entry (App.tsx, main.tsx)
+│   ├── components/                 # Presentational React components — zero business logic
+│   ├── hooks/                      # useVoiceChat, usePageReader, useSpeechRecognition, …
+│   ├── stores/                     # Zustand: checkpointStore · contentStore · settingsStore
+│   ├── services/                   # 🧠 THE DOMAIN LAYER
+│   │   ├── application/              #   ApplicationService — the only facade the UI may call
+│   │   ├── conversation/              #   Detect → Extract → Clean → Serialize (ChatGPT)
+│   │   ├── content-extraction/        #   Generic page/PDF extraction, classification, Q&A
+│   │   ├── ai/                        #   Prompt building, provider factory, validation
+│   │   │   └── providers/                #   GeminiProvider · GroqProvider · StubProvider
+│   │   ├── checkpoint/                #   Build, validate, store, search, filter, recall
+│   │   ├── settings/                  #   Typed settings model + validated persistence
+│   │   ├── data/                      #   Export / Import / Backup / Restore / Migration
+│   │   ├── voice/                     #   SpeechSynthesisService, VoiceCommandParser
+│   │   ├── chrome/                    #   The ONLY layer allowed to call chrome.* directly
+│   │   └── runtime/                   #   Typed message contracts between popup ⇄ background ⇄ content
+│   └── constants/ · types/ · utils/  # Shared, app-wide primitives
+├── public/                         # Static assets and manifest.json
+├── package.json                    # Project dependencies
+└── vite.config.ts                  # Vite build configuration
 ```
 
 <sub>Full reference: <a href="docs/FOLDER_STRUCTURE.md">docs/FOLDER_STRUCTURE.md</a></sub>
@@ -254,7 +260,7 @@ src/
 ```bash
 # 1. Clone
 git clone https://github.com/DhruvOzha85/hexslayerz.git
-cd hexslayerz
+cd hexslayerz/Extension
 
 # 2. Install dependencies
 npm install
@@ -263,18 +269,18 @@ npm install
 npm run build
 
 # 4. Load into Chrome
-#    chrome://extensions → enable "Developer mode" → "Load unpacked" → select /dist
+#    chrome://extensions → enable "Developer mode" → "Load unpacked" → select Extension/dist
 ```
 
 <div align="center">
 
 ```mermaid
 flowchart LR
-    A["npm install"] --> B["npm run build"]
+    A["cd Extension && npm install"] --> B["npm run build"]
     B --> C["chrome://extensions"]
     C --> D["Developer mode ON"]
-    D --> E["Load unpacked → /dist"]
-    E --> F(["🧩 LSCS v2 pinned to toolbar"])
+    D --> E["Load unpacked → /Extension/dist"]
+    E --> F(["🧩 Context(AI) pinned to toolbar"])
     style F fill:#059669,color:#fff,stroke:#065f46
 ```
 
@@ -285,6 +291,8 @@ Once loaded, open any ChatGPT conversation and click **Extract Checkpoint** — 
 <br/>
 
 ## 🛠 Development
+
+**Note: All development commands must be run from inside the `Extension` folder.**
 
 | Command | Purpose |
 |---|---|
@@ -322,7 +330,7 @@ flowchart LR
 
 ## 🔒 Permissions & Privacy
 
-LSCS v2 requests the minimum Manifest V3 permission set:
+Context(AI) requests the minimum Manifest V3 permission set:
 
 ```json
 {
@@ -331,9 +339,9 @@ LSCS v2 requests the minimum Manifest V3 permission set:
 }
 ```
 
-- **`storage`** — everything (checkpoints, settings, API keys) lives in `chrome.storage.local` on your machine. There is no LSCS backend server.
+- **`storage`** — everything (checkpoints, settings, API keys) lives in `chrome.storage.local` on your machine. There is no backend server.
 - **`activeTab`** — content extraction only runs against the tab you explicitly trigger it on.
-- **AI provider calls** go directly from your browser to Google's / Groq's API using **your own API key**, entered locally in Settings. LSCS never proxies, logs, or sees your keys or conversations.
+- **AI provider calls** go directly from your browser to Google's / Groq's API using **your own API key**, entered locally in Settings. Context(AI) never proxies, logs, or sees your keys or conversations.
 
 <br/>
 
@@ -387,6 +395,6 @@ Released under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 <br/><br/>
 
-⭐ **If LSCS v2 saves you from re-explaining context to an AI for the hundredth time, consider starring the repo.**
+⭐ **If Context(AI) saves you from re-explaining context to an AI for the hundredth time, consider starring the repo.**
 
 </div>
