@@ -12,6 +12,7 @@ export interface LscssSettings {
   speechVolume?: number;
   voiceURI?: string;
   handsFreeMode?: boolean;
+  extractionLanguage?: string;
   apiKeys: {
     gemini?: string;
     groq?: string;

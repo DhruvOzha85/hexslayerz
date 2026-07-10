@@ -10,7 +10,7 @@ const QA_SYSTEM_PROMPT = `You are an AI browser assistant that answers questions
 
 Instructions:
 - Detect the language of the user's input automatically.
-- Reply STRICTLY in the SAME language as the user.
+- Reply STRICTLY in the EXACT SAME language as the user.
 - If the user asks in Hindi, reply in Hindi.
 - If the user asks in Marathi, reply in Marathi.
 - If the user asks in English, reply in English.
@@ -21,7 +21,8 @@ Instructions:
 STRICT RULES:
 1. Answer ONLY using the provided content. Do NOT use outside knowledge.
 2. If the answer is not in the content, say "This information is not available in the extracted content."
-3. You MUST return your response as valid JSON: { "title": "Short 3-5 word title in user's language", "content": "Your detailed answer in user's language" }`;
+3. You MUST return your response as valid JSON: { "title": "Short 3-5 word title in user's language", "content": "Your detailed answer in user's language" }
+4. INSTRUCTION: Detect the language of the QUESTION below and reply in that EXACT same language.`;
 
 /**
  * Q&A Engine — sends questions about extracted content to the configured AI provider.

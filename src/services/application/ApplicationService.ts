@@ -179,6 +179,17 @@ export class ApplicationService {
   }
 
   /**
+   * Translate extracted page content into a target language.
+   */
+  static async translateExtractedContent(
+    pageContent: ExtractedContent,
+    targetLanguage: string,
+  ): Promise<ExtractedContent> {
+    const { TranslationEngine } = await import("../content-extraction");
+    return await TranslationEngine.translate(pageContent, targetLanguage);
+  }
+
+  /**
    * Ask a question about extracted page content using the configured AI provider.
    */
   static async askPageQuestion(

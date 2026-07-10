@@ -61,7 +61,14 @@ export const useContentStore = create<ContentState>()(
       extractContent: async () => {
         set({ isExtracting: true, error: null });
         try {
-          const content = await ApplicationService.extractPageContent();
+          let content = await ApplicationService.extractPageContent();
+          
+          // Check for translation
+          const settings = await ApplicationService.loadSettings();
+          if (settings.extractionLanguage && settings.extractionLanguage !== "Original") {
+            content = await ApplicationService.translateExtractedContent(content, settings.extractionLanguage);
+          }
+
           set((state) => ({ 
             extractedContent: content, 
             extractionHistory: [content, ...state.extractionHistory],

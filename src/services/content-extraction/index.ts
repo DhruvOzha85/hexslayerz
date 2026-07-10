@@ -8,3 +8,4 @@ export * from "./ContentSerializer";
 export * from "./QATypes";
 export * from "./QAEngine";
 export * from "./PdfExtractor";
+export * from "./TranslationEngine";

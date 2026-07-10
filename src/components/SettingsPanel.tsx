@@ -86,6 +86,30 @@ export function SettingsPanel() {
 
         <div className="flex flex-col gap-2">
           <label className="text-xs text-neutral-400">
+            Preferred Content Language
+          </label>
+          <select
+            disabled={isLoading}
+            value={settings.extractionLanguage || "Original"}
+            onChange={(e) =>
+              updateSettings({
+                extractionLanguage: e.target.value,
+              })
+            }
+            className="rounded-lg bg-black px-3 py-2 text-sm text-white border border-neutral-800 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50 transition-all"
+          >
+            <option value="Original">Original (No Translation)</option>
+            <option value="English">English</option>
+            <option value="Hindi">Hindi (हिंदी)</option>
+            <option value="Marathi">Marathi (मराठी)</option>
+            <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+            <option value="Spanish">Spanish (Español)</option>
+            <option value="French">French (Français)</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-xs text-neutral-400">
             Max Summary Length (chars)
           </label>
           <input
