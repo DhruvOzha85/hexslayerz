@@ -9,13 +9,12 @@ import {
   SettingsPanel,
   ContentView,
   OnboardingGuide,
-  HomeView,
 } from "../components";
 
-export type ViewType = "home" | "checkpoints" | "content" | "settings";
+type ViewType = "checkpoints" | "content" | "settings";
 
 function App() {
-  const [activeView, setActiveView] = useState<ViewType>("home");
+  const [activeView, setActiveView] = useState<ViewType>("checkpoints");
 
   const {
     checkpoints,
@@ -51,12 +50,6 @@ function App() {
     <div className="flex h-[600px] w-[400px] flex-col bg-black p-5 font-sans text-white tracking-tight">
       <OnboardingGuide />
       <Header activeView={activeView} setActiveView={setActiveView} />
-
-      {activeView === "home" && (
-        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
-          <HomeView setActiveView={setActiveView} />
-        </div>
-      )}
 
       {activeView === "checkpoints" && (
         <>
