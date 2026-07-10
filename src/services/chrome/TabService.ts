@@ -22,6 +22,17 @@ export class TabService {
   }
 
   /**
+   * Instructs the content script to find and scroll to the given text on the page.
+   */
+  static async scrollToText(tabId: number, text: string): Promise<void> {
+    ChromeService.validateEnvironment();
+    await chrome.tabs.sendMessage(tabId, {
+      type: "SCROLL_TO_TEXT",
+      payload: { text },
+    });
+  }
+
+  /**
    * Validates if the given URL is a ChatGPT URL.
    */
   static isChatGPT(url: string | undefined): boolean {

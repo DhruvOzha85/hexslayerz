@@ -64,8 +64,21 @@ export function ContentView() {
 
   const activeSuggestions = getSuggestions();
 
+  const handleMouseUp = async () => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) return;
+
+    const text = selection.toString().trim();
+    if (text.length > 3) { // Only search for meaningful selections
+      const tab = await TabService.getActiveTab();
+      if (tab?.id) {
+        await TabService.scrollToText(tab.id, text);
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" onMouseUp={handleMouseUp}>
       {/* Action Bar */}
       <div className="flex items-center gap-2">
         <button

@@ -143,6 +143,18 @@ chrome.runtime.onMessage.addListener(
         recognition.stop();
       }
       sendResponse({ success: true });
+    } else if (request.type === RuntimeMessageTypes.SCROLL_TO_TEXT) {
+      const textToFind = (request.payload as any)?.text;
+      if (textToFind) {
+        console.log("[LSCS] Finding and scrolling to:", textToFind);
+        // Collapse current selection
+        window.getSelection()?.removeAllRanges();
+        // Use browser's native find method to highlight and scroll
+        const found = (window as any).find(textToFind, false, false, true, false, true, false);
+        sendResponse({ success: found });
+      } else {
+        sendResponse({ success: false, error: "No text provided" });
+      }
     }
 
     // Return false for synchronous response, since detect(), extract(), and serialize() are synchronous.
