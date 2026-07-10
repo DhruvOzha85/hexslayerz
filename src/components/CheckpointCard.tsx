@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import type { Checkpoint } from "../services";
 import { useCheckpointStore } from "../stores";
+import { TabService } from "../services/chrome/TabService";
 
 interface Props {
   checkpoint: Checkpoint;
@@ -64,14 +65,31 @@ export const CheckpointCard = React.memo(function CheckpointCard({
         </div>
         
         <div className="flex gap-3">
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              const tab = await TabService.getActiveTab();
+              if (tab?.id) {
+                await TabService.injectReaderModal(
+                  tab.id,
+                  checkpoint.summary.title,
+                  checkpoint.summary.content
+                );
+                window.close(); // Close extension popup to reveal the host page modal
+              }
+            }}
+            className="text-xs font-medium text-blue-400 hover:text-blue-300 underline"
+          >
+            Read Full
+          </button>
           <a
             href={checkpoint.conversation.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-medium text-blue-400 hover:text-blue-300 underline"
+            className="text-xs font-medium text-neutral-400 hover:text-neutral-300 underline"
             onClick={(e) => e.stopPropagation()}
           >
-            Open Original
+            Open Link
           </a>
           <button
             onClick={(e) => {

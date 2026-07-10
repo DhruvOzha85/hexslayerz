@@ -1,4 +1,5 @@
 import { useContentStore } from "../stores";
+import { TabService } from "../services/chrome/TabService";
 import { ContentChat } from "./ContentChat";
 import { ScreenReaderButton } from "./ScreenReaderButton";
 
@@ -141,9 +142,31 @@ export function ContentView() {
         <div className="flex flex-col gap-3">
           {/* Title */}
           <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-3">
-            <h2 className="text-base font-bold text-white leading-tight">
-              {extractedContent.title}
-            </h2>
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="text-base font-bold text-white leading-tight">
+                {extractedContent.title}
+              </h2>
+              <button
+                onClick={async () => {
+                  const tab = await TabService.getActiveTab();
+                  if (tab?.id) {
+                    await TabService.injectReaderModal(
+                      tab.id,
+                      extractedContent.title,
+                      extractedContent.content
+                    );
+                    window.close(); // Close extension popup to reveal the host page modal
+                  }
+                }}
+                className="shrink-0 flex items-center gap-1.5 rounded bg-blue-600/20 px-2.5 py-1.5 text-xs font-semibold text-blue-400 transition-colors hover:bg-blue-600/30 hover:text-blue-300"
+                title="Read in Full Screen on the Webpage"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                Read Full
+              </button>
+            </div>
             <div className="mt-2 flex items-center gap-2">
               <span className="rounded bg-emerald-900/50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400 uppercase tracking-wider">
                 {extractedContent.websiteType}
