@@ -4,12 +4,37 @@ import { ContentChat } from "./ContentChat";
 import { ScreenReaderButton } from "./ScreenReaderButton";
 import { Sparkles, FileSearch } from "lucide-react";
 
-const SUGGESTIONS = [
+import { SmartModes } from "./SmartModes";
+
+const DEFAULT_SUGGESTIONS = [
   "📄 Summarize Page",
   "🧒 Explain Like I'm 10",
   "⭐ Key Takeaways",
   "❓ Quiz Me",
   "📝 TL;DR",
+];
+
+const STUDENT_SUGGESTIONS = [
+  "Explain Like I'm 10",
+  "Important Concepts",
+  "Create Notes",
+  "Quiz Me",
+  "Explain Difficult Words"
+];
+
+const RESEARCH_SUGGESTIONS = [
+  "Deep Analysis",
+  "Compare Concepts",
+  "Find Important Facts",
+  "Explain Technical Details",
+  "Generate Research Notes"
+];
+
+const SUMMARY_SUGGESTIONS = [
+  "TL;DR",
+  "Key Takeaways",
+  "Important Points",
+  "30 Second Summary"
 ];
 
 /**
@@ -26,8 +51,18 @@ export function ContentView() {
     clearContent,
     loadFromHistory,
     clearHistory,
-    askQuestion
+    askQuestion,
+    smartMode
   } = useContentStore();
+
+  const getSuggestions = () => {
+    if (smartMode === "student") return STUDENT_SUGGESTIONS;
+    if (smartMode === "research") return RESEARCH_SUGGESTIONS;
+    if (smartMode === "summary") return SUMMARY_SUGGESTIONS;
+    return DEFAULT_SUGGESTIONS;
+  };
+
+  const activeSuggestions = getSuggestions();
 
   return (
     <div className="flex flex-col gap-4">
@@ -222,9 +257,12 @@ export function ContentView() {
             </div>
           )}
 
+          {/* Smart AI Modes */}
+          <SmartModes />
+
           {/* AI Suggestions */}
           <div className="my-1 flex flex-wrap gap-1.5">
-            {SUGGESTIONS.map((suggestion, idx) => (
+            {activeSuggestions.map((suggestion, idx) => (
               <button
                 key={idx}
                 onClick={() => askQuestion(suggestion)}

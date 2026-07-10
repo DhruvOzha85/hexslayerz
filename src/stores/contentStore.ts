@@ -4,6 +4,8 @@ import { persist } from "zustand/middleware";
 import { ApplicationService } from "../services";
 import type { ExtractedContent, QAMessage } from "../services";
 
+export type SmartMode = "student" | "research" | "summary" | null;
+
 interface ContentState {
   /** The extracted content result, or null if nothing extracted yet */
   extractedContent: ExtractedContent | null;
@@ -41,6 +43,12 @@ interface ContentState {
   lastSpokenMessage: string | null;
   /** Sets the last spoken message for repetition */
   setLastSpokenMessage: (msg: string | null) => void;
+
+  // --- Smart Modes ---
+  /** Currently active AI Smart Mode */
+  smartMode: SmartMode;
+  /** Sets the active AI Smart Mode */
+  setSmartMode: (mode: SmartMode) => void;
 }
 
 export const useContentStore = create<ContentState>()(
@@ -54,9 +62,11 @@ export const useContentStore = create<ContentState>()(
       isAsking: false,
       readingProgress: 0,
       lastSpokenMessage: null,
+      smartMode: null,
 
       setReadingProgress: (index) => set({ readingProgress: index }),
       setLastSpokenMessage: (msg) => set({ lastSpokenMessage: msg }),
+      setSmartMode: (mode) => set({ smartMode: mode }),
 
       extractContent: async () => {
         set({ isExtracting: true, error: null });
@@ -111,7 +121,7 @@ export const useContentStore = create<ContentState>()(
       },
 
       askQuestion: async (question: string) => {
-        const { extractedContent } = get();
+        const { extractedContent, smartMode } = get();
         if (!extractedContent || !question.trim()) return;
 
         // Add user message
@@ -131,6 +141,7 @@ export const useContentStore = create<ContentState>()(
           const answer = await ApplicationService.askPageQuestion(
             question.trim(),
             extractedContent,
+            smartMode
           );
 
           const assistantMsg: QAMessage = {
@@ -168,7 +179,10 @@ export const useContentStore = create<ContentState>()(
     }),
     {
       name: "lscs-content-storage",
-      partialize: (state) => ({ extractionHistory: state.extractionHistory }),
+      partialize: (state) => ({ 
+        extractionHistory: state.extractionHistory,
+        smartMode: state.smartMode
+      }),
     }
   )
 );

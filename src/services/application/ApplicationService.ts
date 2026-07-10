@@ -195,8 +195,9 @@ export class ApplicationService {
   static async askPageQuestion(
     question: string,
     pageContent: ExtractedContent,
+    smartMode?: "student" | "research" | "summary" | null
   ): Promise<string> {
-    const result = await QAEngine.ask(question, pageContent);
+    const result = await QAEngine.ask(question, pageContent, smartMode);
 
     if (!result.success) {
       throw new Error(result.error);

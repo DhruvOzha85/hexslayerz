@@ -35,6 +35,7 @@ export class QAEngine {
   static async ask(
     question: string,
     pageContent: ExtractedContent,
+    smartMode?: "student" | "research" | "summary" | null
   ): Promise<QAResult> {
     try {
       if (!question.trim()) {
@@ -53,7 +54,7 @@ export class QAEngine {
       }
 
       // Build the Q&A prompt with page context
-      const prompt = this.buildQAPrompt(question, pageContent);
+      const prompt = this.buildQAPrompt(question, pageContent, smartMode);
 
       // Get the AI provider
       const provider = ProviderFactory.getProvider(providerType, apiKey);
@@ -83,6 +84,7 @@ export class QAEngine {
   private static buildQAPrompt(
     question: string,
     pageContent: ExtractedContent,
+    smartMode?: "student" | "research" | "summary" | null
   ): Prompt {
     // Build a condensed version of the content for the prompt
     const sectionsText = pageContent.sections
@@ -111,8 +113,37 @@ ${truncatedContext}
 
 USER QUESTION: ${question}`;
 
+    let systemPrompt = QA_SYSTEM_PROMPT;
+
+    if (smartMode === "student") {
+      systemPrompt += `\n\nSMART MODE ACTIVE: STUDENT
+You are an expert teacher.
+Explain the webpage in very simple language.
+Use easy English.
+Break complex ideas into small sections.
+Provide examples wherever possible.
+Highlight important terms.
+End with 5 key takeaways.`;
+    } else if (smartMode === "research") {
+      systemPrompt += `\n\nSMART MODE ACTIVE: RESEARCH
+You are a research assistant.
+Analyze the webpage thoroughly.
+Identify important concepts.
+Mention advantages and disadvantages.
+Provide technical explanations.
+Point out assumptions.
+Mention limitations if any.
+Generate a structured analysis.`;
+    } else if (smartMode === "summary") {
+      systemPrompt += `\n\nSMART MODE ACTIVE: QUICK SUMMARY
+Provide a concise summary of the webpage.
+Maximum 5 bullet points.
+Highlight only the most important information.
+Keep the response under one minute of reading.`;
+    }
+
     return {
-      system: QA_SYSTEM_PROMPT,
+      system: systemPrompt,
       user,
     };
   }
