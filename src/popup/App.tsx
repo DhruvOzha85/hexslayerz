@@ -8,6 +8,7 @@ import {
   Feedback,
   SettingsPanel,
   ContentView,
+  OnboardingGuide,
 } from "../components";
 
 type ViewType = "checkpoints" | "content" | "settings";
@@ -47,6 +48,7 @@ function App() {
 
   return (
     <div className="flex h-[600px] w-[400px] flex-col bg-neutral-950 p-4 font-sans text-white">
+      <OnboardingGuide />
       <Header activeView={activeView} setActiveView={setActiveView} />
 
       {activeView === "checkpoints" && (
