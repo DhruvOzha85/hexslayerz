@@ -266,7 +266,7 @@ export function ContentView() {
               <div className="absolute top-0 left-0 w-1 h-full bg-violet-500"></div>
               <h3 className="mb-2 text-xs font-bold text-violet-300 uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="h-3 w-3" />
-                AI Summary
+                Page Summary
               </h3>
               <p className="text-sm leading-relaxed text-neutral-200 whitespace-pre-wrap">
                 {pageSummary}

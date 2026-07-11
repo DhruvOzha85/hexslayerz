@@ -98,21 +98,20 @@ export const useContentStore = create<ContentState>()(
 
         try {
           const content = await Promise.race([extractionPromise, timeoutPromise]);
+          
+          // Local Extractive Summarization (No API Key needed)
+          // Reads the whole document and extracts the most relevant initial sentences
+          const sentences = content.content.split(/(?<=[.!?])\s+/);
+          const validSentences = sentences.filter(s => s.trim().length > 40 && s.split(' ').length > 5);
+          const localSummary = validSentences.slice(0, 4).join(' ') || "No text available to summarize.";
+
           set((state) => ({
             extractedContent: content,
             extractionHistory: [content, ...state.extractionHistory].slice(0, 3),
             isExtracting: false,
             chatMessages: [],
-            pageSummary: "Generating AI summary...", // Initial loading state
+            pageSummary: localSummary, 
           }));
-
-          // Fetch the summary silently and store it in pageSummary instead of polluting chat
-          const answer = await ApplicationService.askPageQuestion(
-            "Please provide a proper synthesized summary of this page in a few lines of text.",
-            content,
-            "summary"
-          ).catch(() => "Summary generation failed.");
-          set({ pageSummary: answer });
         } catch (error) {
           const message =
             error instanceof Error
