@@ -72,12 +72,16 @@ export class SpeechSynthesisService {
     }
 
     if (!this.bestVoice) this.selectBestVoice();
-    if (this.bestVoice) utterance.voice = this.bestVoice;
+    if (this.bestVoice) {
+      utterance.voice = this.bestVoice;
+      utterance.lang = this.bestVoice.lang;
+    } else {
+      utterance.lang = "en-US";
+    }
     
     utterance.rate = rate;
     utterance.pitch = pitch;
     utterance.volume = volume;
-    utterance.lang = "en-US";
 
     utterance.onstart = () => {
       this.isSpeaking = true;

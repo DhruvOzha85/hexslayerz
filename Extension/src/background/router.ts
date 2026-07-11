@@ -4,6 +4,7 @@ import { handlePing } from "./handlers/PingHandler";
 import { handleConversationDetection } from "./handlers/ConversationDetectionHandler";
 import { handleConversationExtraction } from "./handlers/ConversationExtractionHandler";
 import { handleContentExtraction } from "./handlers/ContentExtractionHandler";
+import { handleExplainText } from "./handlers/ExplainHandler";
 
 type MessageHandler = (
   request: RuntimeRequest,
@@ -15,6 +16,7 @@ const routes: Partial<Record<string, MessageHandler>> = {
   [RuntimeMessageTypes.CHECK_CONVERSATION]: handleConversationDetection,
   [RuntimeMessageTypes.EXTRACT_CONVERSATION]: handleConversationExtraction,
   [RuntimeMessageTypes.EXTRACT_PAGE_CONTENT]: handleContentExtraction,
+  [RuntimeMessageTypes.EXPLAIN_TEXT]: handleExplainText,
 };
 
 export const routeMessage = async (

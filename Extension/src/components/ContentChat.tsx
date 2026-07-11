@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useContentStore } from "../stores";
+import { useContentStore, useSettingsStore } from "../stores";
 import { useVoiceChat } from "../hooks/useVoiceChat";
 import { SpeechSynthesisService } from "../services/voice";
 
@@ -9,14 +9,13 @@ import { SpeechSynthesisService } from "../services/voice";
  */
 export function ContentChat() {
   const { chatMessages, isAsking, askQuestion, clearChat } = useContentStore();
+  const { settings } = useSettingsStore();
   const [input, setInput] = useState("");
   
-  // Playback state
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+  const isHandsFree = settings?.handsFreeMode;
   
   // Custom Voice Hooks (abstracts STT, TTS, Commands, Hands-Free mode)
-  const { isListening, transcript, speechError, startListening, stopListening } = useVoiceChat();
+  const { voiceState, isListening, transcript, speechError, startListening, stopListening } = useVoiceChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -24,15 +23,7 @@ export function ContentChat() {
   // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages, isSpeaking]);
-
-  // Subscribe to TTS state
-  useEffect(() => {
-    return SpeechSynthesisService.subscribe((speaking, paused) => {
-      setIsSpeaking(speaking);
-      setIsPaused(paused);
-    });
-  }, []);
+  }, [chatMessages, voiceState]);
 
   // Update input when transcript changes (for visual feedback)
   useEffect(() => {
@@ -55,7 +46,7 @@ export function ContentChat() {
   };
 
   const handleMicClick = () => {
-    if (isListening) {
+    if (voiceState === "listening" || voiceState === "speaking") {
       stopListening();
     } else {
       SpeechSynthesisService.stop();
@@ -65,42 +56,13 @@ export function ContentChat() {
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-neutral-800 bg-neutral-950 p-4 relative transition-all shadow-sm">
-      {/* Playback Controls Overlay (appears when speaking) */}
-      {(isSpeaking || isPaused) && (
+      {/* Playback Controls Overlay (appears when speaking outside voice assistant mode) */}
+      {(voiceState !== "speaking" && voiceState !== "processing" && (window.speechSynthesis?.speaking)) && (
         <div className="absolute top-2 right-14 z-10 flex items-center gap-2 bg-neutral-900/90 backdrop-blur border border-neutral-700 rounded-full px-2 py-1 shadow-lg animate-in fade-in zoom-in-95">
-          {/* Animated Waveform */}
-          {isSpeaking && !isPaused && (
-            <div className="flex items-center gap-[2px] h-3 mr-1">
-              <div className="w-[3px] h-full bg-emerald-400 rounded-full animate-[pulse_1s_ease-in-out_infinite]" />
-              <div className="w-[3px] h-[60%] bg-emerald-400 rounded-full animate-[pulse_0.8s_ease-in-out_infinite_0.2s]" />
-              <div className="w-[3px] h-[80%] bg-emerald-400 rounded-full animate-[pulse_1.2s_ease-in-out_infinite_0.4s]" />
-            </div>
-          )}
-          {isPaused ? (
-            <button 
-              onClick={() => SpeechSynthesisService.resume()}
-              className="p-1 text-emerald-400 hover:text-emerald-300 transition-colors"
-              title="Resume"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-              </svg>
-            </button>
-          ) : (
-            <button 
-              onClick={() => SpeechSynthesisService.pause()}
-              className="p-1 text-amber-400 hover:text-amber-300 transition-colors"
-              title="Pause"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </button>
-          )}
           <button 
             onClick={() => SpeechSynthesisService.stop()}
             className="p-1 text-red-400 hover:text-red-300 transition-colors"
-            title="Stop"
+            title="Stop Reading"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
@@ -128,13 +90,32 @@ export function ContentChat() {
           <span className="text-xs font-semibold text-violet-300">
             Ask AI about this page
           </span>
-          {isListening && (
-            <span className="flex items-center gap-1 ml-2">
+          {voiceState === "listening" && (
+            <span className="flex items-center gap-1.5 ml-2">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
               <span className="text-[10px] text-red-400 animate-pulse font-medium">Listening...</span>
+            </span>
+          )}
+          {voiceState === "processing" && (
+            <span className="flex items-center gap-1.5 ml-2">
+              <svg className="animate-spin h-3.5 w-3.5 text-violet-400" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span className="text-[10px] text-violet-400 font-semibold animate-pulse">Thinking...</span>
+            </span>
+          )}
+          {voiceState === "speaking" && (
+            <span className="flex items-center gap-1.5 ml-2">
+              <div className="flex items-center gap-[2.5px] h-3">
+                <div className="w-[3px] h-full bg-emerald-400 rounded-full animate-[pulse_1s_ease-in-out_infinite]" />
+                <div className="w-[3px] h-[60%] bg-emerald-400 rounded-full animate-[pulse_0.8s_ease-in-out_infinite_0.2s]" />
+                <div className="w-[3px] h-[80%] bg-emerald-400 rounded-full animate-[pulse_1.2s_ease-in-out_infinite_0.4s]" />
+              </div>
+              <span className="text-[10px] text-emerald-400 font-semibold">Speaking...</span>
             </span>
           )}
         </div>
@@ -181,8 +162,8 @@ export function ContentChat() {
                   {msg.role === "user" ? "You" : "AI"}
                 </span>
                 
-                {/* Speaker Button for AI Messages */}
-                {msg.role === "assistant" && (
+                {/* Speaker Button for AI Messages - Hidden in hands-free mode */}
+                {msg.role === "assistant" && !isHandsFree && (
                   <button
                     onClick={() => SpeechSynthesisService.speak(msg.content)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity text-neutral-500 hover:text-emerald-400 p-0.5"
@@ -222,17 +203,25 @@ export function ContentChat() {
         <button
           type="button"
           onClick={handleMicClick}
-          disabled={isAsking}
-          className={`flex-shrink-0 p-1.5 rounded transition-all duration-300 ${
-            isListening 
-              ? "bg-red-500/20 text-red-400 hover:bg-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]" 
-              : "bg-neutral-800 text-neutral-400 hover:text-violet-400 hover:bg-neutral-700"
+          disabled={voiceState === "processing"}
+          className={`flex-shrink-0 p-1.5 rounded-lg border transition-all duration-300 ${
+            voiceState === "listening" 
+              ? "bg-gradient-to-r from-red-500/20 to-violet-500/20 text-red-400 border-violet-500/40 shadow-[0_0_12px_rgba(139,92,246,0.6)] animate-pulse" 
+              : voiceState === "speaking"
+              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-[0_0_12px_rgba(52,211,153,0.5)]"
+              : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-violet-400 hover:bg-neutral-700"
           } disabled:opacity-50`}
-          title={isListening ? "Stop listening" : "Start speaking"}
+          title={
+            voiceState === "listening" 
+              ? "Stop listening" 
+              : voiceState === "speaking" 
+              ? "Stop speaking" 
+              : "Start speaking"
+          }
         >
-          {isListening ? (
-             <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-               <rect x="9" y="9" width="6" height="6" fill="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          {voiceState === "listening" || voiceState === "speaking" ? (
+             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" strokeWidth="2" strokeLinejoin="round" />
              </svg>
           ) : (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,8 +235,16 @@ export function ContentChat() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={isListening ? "Listening (Say 'Stop reading')..." : "Ask a question..."}
-          disabled={isAsking || isListening}
+          placeholder={
+            voiceState === "listening" 
+              ? "Listening (Say 'Stop reading')..." 
+              : voiceState === "processing" 
+              ? "AI is thinking..." 
+              : voiceState === "speaking" 
+              ? "AI is speaking..." 
+              : "Ask a question..."
+          }
+          disabled={isAsking || voiceState !== "idle"}
           id="qa-input"
           className="flex-1 min-w-0 rounded-lg border border-neutral-800 bg-black px-3 py-2 text-xs text-white placeholder-neutral-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none transition-all disabled:opacity-50"
         />

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useCheckpointStore } from "../stores";
+import { useCheckpointStore, useSettingsStore } from "../stores";
 import { ApplicationService } from "../services";
 import {
   Header,
@@ -9,9 +9,10 @@ import {
   SettingsPanel,
   ContentView,
   OnboardingGuide,
+  ShoppingView,
 } from "../components";
 
-type ViewType = "checkpoints" | "content" | "settings";
+type ViewType = "checkpoints" | "content" | "settings" | "shopping";
 
 function App() {
   const [activeView, setActiveView] = useState<ViewType>("checkpoints");
@@ -24,10 +25,13 @@ function App() {
     sortDirection,
   } = useCheckpointStore();
 
-  // Load initial checkpoints on mount
+  const { loadSettings } = useSettingsStore();
+
+  // Load initial data on mount
   useEffect(() => {
     loadCheckpoints();
-  }, [loadCheckpoints]);
+    loadSettings();
+  }, [loadCheckpoints, loadSettings]);
 
   // Derive visible checkpoints through purely functional transformations
   const visibleCheckpoints = useMemo(() => {
@@ -72,6 +76,12 @@ function App() {
       {activeView === "settings" && (
         <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
           <SettingsPanel />
+        </div>
+      )}
+
+      {activeView === "shopping" && (
+        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+          <ShoppingView />
         </div>
       )}
 

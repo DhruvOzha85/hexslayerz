@@ -26,6 +26,12 @@ const MODES: ModeInfo[] = [
     icon: "⚡",
     description: "Get the fastest overview.",
   },
+  {
+    id: "quiz",
+    title: "Interactive Quiz",
+    icon: "🎮",
+    description: "Test page knowledge.",
+  },
 ];
 
 export function SmartModes() {

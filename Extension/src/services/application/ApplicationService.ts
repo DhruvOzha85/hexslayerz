@@ -138,6 +138,11 @@ export class ApplicationService {
 
   /**
    * Extracts cleaned, structured content from the current active tab's page or PDF.
+   *
+   * Sends EXTRACT_PAGE_CONTENT **directly** from the popup to the content script
+   * (Popup → Content Script) using chrome.tabs.sendMessage, bypassing the
+   * background service worker. This prevents the MV3 service worker from going
+   * dormant mid-await and silently dropping the response.
    */
   static async extractPageContent(): Promise<ExtractedContent> {
     const tab = await TabService.getActiveTab();
@@ -145,12 +150,23 @@ export class ApplicationService {
       throw new Error("No active tab found.");
     }
 
+    // Block restricted Chrome-internal pages
+    if (
+      tab.url.startsWith("chrome://") ||
+      tab.url.startsWith("chrome-extension://") ||
+      tab.url.startsWith("about:") ||
+      tab.url.startsWith("edge://")
+    ) {
+      throw new Error(
+        "Cannot extract content from Chrome system pages. Navigate to a regular webpage."
+      );
+    }
+
     // Handle PDFs directly in the popup/background
     if (tab.url.toLowerCase().endsWith(".pdf") || tab.url.startsWith("file://")) {
       try {
         const response = await fetch(tab.url);
         if (!response.ok) throw new Error("Failed to fetch PDF.");
-        
         const arrayBuffer = await response.arrayBuffer();
         return await PdfExtractor.extract(arrayBuffer, tab.url);
       } catch (error) {
@@ -160,14 +176,32 @@ export class ApplicationService {
       }
     }
 
-    // Handle normal webpages via the content script
-    const result = await RuntimeService.sendMessage<void, ExtractedContent>({
-      type: RuntimeMessageTypes.EXTRACT_PAGE_CONTENT,
-    });
+    // Send DIRECTLY from popup → content script (skips background service worker)
+    // This is the most reliable path in MV3 for popup-initiated extractions.
+    let result: { success: boolean; data?: ExtractedContent; error?: string };
+    try {
+      result = await chrome.tabs.sendMessage(tab.id, {
+        type: RuntimeMessageTypes.EXTRACT_PAGE_CONTENT,
+      });
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      if (msg.includes("Receiving end does not exist") || msg.includes("Could not establish connection")) {
+        throw new Error(
+          "Extension script not loaded on this page. Please refresh the page (F5) and try again."
+        );
+      }
+      throw new Error(`Content extraction failed: ${msg}`);
+    }
+
+    if (!result) {
+      throw new Error(
+        "Content extraction failed: No response from content script. Please refresh the page (F5) and try again."
+      );
+    }
 
     if (!result.success) {
       throw new Error(
-        `Content extraction failed: ${result.error || "Unknown error"}`,
+        `Content extraction failed: ${result.error || "Unknown error"}`
       );
     }
 
@@ -195,7 +229,7 @@ export class ApplicationService {
   static async askPageQuestion(
     question: string,
     pageContent: ExtractedContent,
-    smartMode?: "student" | "research" | "summary" | null
+    smartMode?: "student" | "research" | "summary" | "quiz" | null
   ): Promise<string> {
     const result = await QAEngine.ask(question, pageContent, smartMode);
 

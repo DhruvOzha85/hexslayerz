@@ -3,9 +3,11 @@ import type { RuntimeRequest, RuntimeResponse } from "../../services";
 import { TabService } from "../../services/chrome/TabService";
 import { RuntimeMessageTypes } from "../../services";
 
+const CONTENT_SCRIPT_TIMEOUT_MS = 15000;
+
 /**
  * Handles EXTRACT_PAGE_CONTENT by forwarding the message
- * to the active tab's content script.
+ * to the active tab's content script, with a hard timeout.
  */
 export const handleContentExtraction = async (
   _request: RuntimeRequest,
@@ -18,18 +20,27 @@ export const handleContentExtraction = async (
       return { success: false, error: "No active tab found." };
     }
 
-    if (!tab.url || tab.url.startsWith("chrome://")) {
+    if (!tab.url || tab.url.startsWith("chrome://") || tab.url.startsWith("chrome-extension://")) {
       return {
         success: false,
         error: "Cannot extract content from this page.",
       };
     }
 
-    const response = await TabService.sendMessageToTab<
+    // Race the content script reply against a hard timeout
+    const timeoutPromise = new Promise<RuntimeResponse>((resolve) =>
+      setTimeout(() => resolve({
+        success: false,
+        error: "Content script did not respond in time. Please refresh the page (F5) and try again.",
+      }), CONTENT_SCRIPT_TIMEOUT_MS)
+    );
+
+    const messagePromise = TabService.sendMessageToTab<
       RuntimeRequest,
       RuntimeResponse
     >(tab.id, { type: RuntimeMessageTypes.EXTRACT_PAGE_CONTENT });
 
+    const response = await Promise.race([messagePromise, timeoutPromise]);
     return response;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

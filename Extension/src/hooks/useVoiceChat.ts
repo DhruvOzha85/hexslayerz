@@ -1,18 +1,33 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useContentStore, useSettingsStore } from "../stores";
-import { useSpeechRecognition } from "./useSpeechRecognition";
-import { SpeechSynthesisService, VoiceCommandParser, VoiceCommandIntent } from "../services/voice";
+import { SpeechSynthesisService, VoiceCommandParser, VoiceCommandIntent, VoiceController } from "../services/voice";
+import type { VoiceState } from "../services/voice";
 import { usePageReader } from "./usePageReader";
 
 export function useVoiceChat() {
   const { chatMessages, isAsking, askQuestion, setLastSpokenMessage, lastSpokenMessage } = useContentStore();
   const { settings } = useSettingsStore();
-  const { isListening, transcript, startListening, stopListening, error: speechError, resetTranscript } = useSpeechRecognition();
   const { startReading, stopReading, pauseReading, resumeReading } = usePageReader();
 
-  // Watch for AI responses to speak them automatically (and handle Hands-Free mode)
+  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
+  const [transcript, setTranscript] = useState<string>("");
+  const [speechError, setSpeechError] = useState<string | null>(null);
+
+  // Subscribe to VoiceController
+  useEffect(() => {
+    const controller = VoiceController.getInstance();
+    const unsubscribe = controller.subscribe((state, currentTranscript, error) => {
+      setVoiceState(state);
+      setTranscript(currentTranscript);
+      setSpeechError(error);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Watch for typed AI responses to speak them automatically (if not already speaking in voice session)
   useEffect(() => {
     if (!settings?.autoReadResponses) return;
+    if (voiceState === "speaking" || voiceState === "processing") return; // Let VoiceController handle voice sessions
     
     const latestMessage = chatMessages[chatMessages.length - 1];
     
@@ -27,17 +42,11 @@ export function useVoiceChat() {
           settings.speechSpeed || 1.0,
           settings.speechPitch ?? 1.0,
           settings.speechVolume ?? 1.0,
-          settings.voiceURI,
-          () => {
-            // Callback when speaking finishes
-            if (settings.handsFreeMode) {
-              startListening(); // Auto-listen for next command/question
-            }
-          }
+          settings.voiceURI
         );
       }
     }
-  }, [chatMessages, isAsking, settings?.autoReadResponses, settings?.speechSpeed, settings?.handsFreeMode, lastSpokenMessage, setLastSpokenMessage, startListening]);
+  }, [chatMessages, isAsking, settings?.autoReadResponses, settings?.speechSpeed, lastSpokenMessage, setLastSpokenMessage, voiceState]);
 
   // Command parser interception
   const handleVoiceCommand = useCallback(async (intent: VoiceCommandIntent) => {
@@ -77,20 +86,37 @@ export function useVoiceChat() {
     }
   }, [askQuestion, lastSpokenMessage, settings?.speechSpeed, startReading, stopReading, pauseReading, resumeReading]);
 
-  // Intercept transcripts in real-time
+  // Intercept transcripts in real-time to check for commands
   useEffect(() => {
-    if (transcript) {
+    if (transcript && voiceState === "listening") {
       const command = VoiceCommandParser.parse(transcript);
       if (command.isCommand) {
+        // Execute the command action
         handleVoiceCommand(command.intent!);
-        resetTranscript();
-        stopListening();
+        
+        // Stop VoiceController and clear transcript
+        const controller = VoiceController.getInstance();
+        controller.stopListening();
+        controller.resetTranscript();
       }
     }
-  }, [transcript, handleVoiceCommand, resetTranscript, stopListening]);
+  }, [transcript, voiceState, handleVoiceCommand]);
+
+  const startListening = useCallback(() => {
+    VoiceController.getInstance().startListening();
+  }, []);
+
+  const stopListening = useCallback(() => {
+    VoiceController.getInstance().stopListening();
+  }, []);
+
+  const resetTranscript = useCallback(() => {
+    VoiceController.getInstance().resetTranscript();
+  }, []);
 
   return {
-    isListening,
+    voiceState,
+    isListening: voiceState === "listening",
     transcript,
     speechError,
     startListening,

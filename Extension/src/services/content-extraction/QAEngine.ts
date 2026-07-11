@@ -6,21 +6,22 @@ import { ProviderFactory } from "../ai/ProviderFactory";
 import { AIProviderType } from "../ai/ProviderTypes";
 import { SettingsService } from "../settings";
 
-const QA_SYSTEM_PROMPT = `You are an AI browser assistant. Your primary goal is to answer questions based on the current webpage content, but you can also act as a general AI assistant and use outside knowledge if the user asks something not found on the page or requests general help.
+const QA_SYSTEM_PROMPT = `You are an AI browser assistant that answers questions based ONLY on the current webpage content.
 
 Instructions:
 - Detect the language of the user's input automatically.
-- Reply STRICTLY in the EXACT SAME language as the user.
+- Reply STRICTLY in the SAME language as the user.
 - If the user asks in Hindi, reply in Hindi.
 - If the user asks in Marathi, reply in Marathi.
 - If the user asks in English, reply in English.
 - Do NOT translate unless necessary.
-- Keep the answer clear and concise.
+- Keep the answer clear, concise, and based only on the webpage content.
+- Do not add extra information outside the page.
 
 STRICT RULES:
-1. First, prioritize answering using the provided webpage content. If the user's question requires general knowledge or information not on the page (like finding a pincode), you are fully allowed to provide it.
+1. You MUST answer based ONLY on the provided webpage content. Do NOT use or add extra information from outside the page.
 2. You MUST return your response as valid JSON: { "title": "Short 3-5 word title in user's language", "content": "Your detailed answer in user's language" }
-3. INSTRUCTION: Detect the language of the QUESTION below and reply in that EXACT same language.`;
+3. INSTRUCTION: Detect the language of the user's input below and reply in that SAME language.`;
 
 /**
  * Q&A Engine — sends questions about extracted content to the configured AI provider.
@@ -33,7 +34,7 @@ export class QAEngine {
   static async ask(
     question: string,
     pageContent: ExtractedContent,
-    smartMode?: "student" | "research" | "summary" | null
+    smartMode?: "student" | "research" | "summary" | "quiz" | null
   ): Promise<QAResult> {
     try {
       if (!question.trim()) {
@@ -82,7 +83,7 @@ export class QAEngine {
   private static buildQAPrompt(
     question: string,
     pageContent: ExtractedContent,
-    smartMode?: "student" | "research" | "summary" | null
+    smartMode?: "student" | "research" | "summary" | "quiz" | null
   ): Prompt {
     // Build a condensed version of the content for the prompt
     const sectionsText = pageContent.sections
@@ -109,7 +110,14 @@ PAGE TYPE: ${pageContent.websiteType}
 ${truncatedContext}
 --- END OF CONTENT ---
 
-USER QUESTION: ${question}`;
+USER QUESTION: ${question}
+
+CRITICAL LANGUAGE REQUIREMENT:
+Detect the language of the "USER QUESTION" above. You MUST write your JSON response ("title" and "content") in that EXACT SAME language.
+- If the USER QUESTION is in Hindi, you MUST write the answer in Hindi.
+- If the USER QUESTION is in Marathi, you MUST write the answer in Marathi.
+- If the USER QUESTION is in English, you MUST write the answer in English.
+Do NOT respond in English if the question is in Hindi or Marathi.`;
 
     let systemPrompt = QA_SYSTEM_PROMPT;
 
@@ -117,7 +125,7 @@ USER QUESTION: ${question}`;
       systemPrompt += `\n\nSMART MODE ACTIVE: STUDENT
 You are an expert teacher.
 Explain the webpage in very simple language.
-Use easy English.
+Use easy, simple language matching the user's language.
 Break complex ideas into small sections.
 Provide examples wherever possible.
 Highlight important terms.
@@ -138,6 +146,14 @@ Provide a concise summary of the webpage.
 Maximum 5 bullet points.
 Highlight only the most important information.
 Keep the response under one minute of reading.`;
+    } else if (smartMode === "quiz") {
+      systemPrompt = `You are a quiz generation assistant. Your task is to generate an interactive multiple-choice quiz based strictly on the webpage content.
+      
+      STRICT RULES:
+      1. You MUST return your response as valid JSON: { "title": "Interactive Quiz", "content": "raw JSON array of questions" }
+      2. The "content" field MUST be a string containing a valid JSON array of 3 objects.
+      3. Do NOT add any markdown formatting, text, or commentary outside the JSON array in the "content" field.
+      4. Each question object in the JSON array must contain: "question" (string), "options" (array of 4 choice strings starting with A), B), C), D)), "correctIndex" (number 0 to 3), and "explanation" (string explaining the correct answer).`;
     }
 
     return {

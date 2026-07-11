@@ -20,8 +20,14 @@ export class ContentSerializer {
       // 1. Run raw extraction
       const raw = ContentExtractor.extract();
 
-      // 2. Validate minimum content
-      if (!raw.fullText || raw.fullText.trim().length < 50) {
+      // 2. Validate minimum content — fallback to live document body if needed
+      let rawFullText = raw.fullText;
+      if (!rawFullText || rawFullText.trim().length < 50) {
+        // Cloned DOM text extraction may fail on some pages; read from live body as fallback
+        rawFullText = document.body.innerText || document.body.textContent || "";
+      }
+
+      if (!rawFullText || rawFullText.trim().length < 50) {
         return {
           success: false,
           error: "Content could not be extracted clearly from this page.",
@@ -30,7 +36,13 @@ export class ContentSerializer {
 
       // 3. Clean all output
       const cleanTitle = ContentCleaner.cleanTitle(raw.title);
-      const cleanContent = ContentCleaner.clean(raw.fullText);
+      // Truncate to a maximum of 50,000 characters to prevent QuotaExceededError in localStorage.
+      // AI models generally max out at ~15k-30k characters for this extension's prompt context anyway.
+      let cleanContent = ContentCleaner.clean(rawFullText);
+      if (cleanContent.length > 50000) {
+        cleanContent = cleanContent.slice(0, 50000) + "\n\n[Content truncated due to size limits...]";
+      }
+
       const cleanSections = raw.sections
         .map((s) => ({
           heading: ContentCleaner.clean(s.heading),
@@ -42,7 +54,10 @@ export class ContentSerializer {
       const extracted: ExtractedContent = {
         title: cleanTitle || "Untitled Page",
         content: cleanContent,
-        sections: cleanSections,
+        // If section extraction yielded nothing, create one section from the full text
+        sections: cleanSections.length > 0
+          ? cleanSections
+          : [{ heading: "", text: cleanContent.slice(0, 5000) }],
         url: window.location.href,
         extractedAt: Date.now(),
         websiteType: raw.websiteType,

@@ -249,21 +249,52 @@ export class ContentExtractor {
 
   /**
    * Get text from root until the first heading (for pre-heading content).
+   * Uses textContent since innerText is unreliable on detached/cloned DOM nodes.
    */
   private static getTextUntilNextHeading(
     root: HTMLElement,
     _nextHeading: HTMLElement | null,
   ): string {
-    // Simple fallback: extract all innerText from the root
-    return root.innerText || root.textContent || "";
+    return this.buildFullText(root);
   }
-
-
 
   /**
    * Build the full plain text from the content root.
+   * Uses a TreeWalker to collect text nodes because `innerText` is empty
+   * on detached (cloned) DOM elements that haven't been rendered.
    */
   private static buildFullText(root: HTMLElement): string {
-    return root.innerText || root.textContent || "";
+    const parts: string[] = [];
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ALL, {
+      acceptNode: (node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          const tag = el.tagName.toUpperCase();
+          if (["SCRIPT", "STYLE", "NOSCRIPT", "SVG", "CANVAS"].includes(tag)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+
+    let node = walker.nextNode();
+    while (node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.nodeValue?.trim();
+        if (text) {
+          parts.push(text);
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = (node as HTMLElement).tagName.toUpperCase();
+        if (["P", "DIV", "BR", "LI", "TR", "H1", "H2", "H3", "H4", "H5", "H6", "SECTION", "ARTICLE", "BLOCKQUOTE", "PRE", "CODE"].includes(tag)) {
+          parts.push("\n");
+        }
+      }
+      node = walker.nextNode();
+    }
+
+    return parts.join(" ").replace(/\n\s+/g, "\n").replace(/\n+/g, "\n\n").trim();
   }
 }

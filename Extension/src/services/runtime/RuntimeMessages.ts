@@ -14,6 +14,17 @@ export const RuntimeMessageTypes = {
 
   // Text Navigation
   SCROLL_TO_TEXT: "SCROLL_TO_TEXT",
+
+  // AI Selection & Explanations
+  EXPLAIN_TEXT: "EXPLAIN_TEXT",
+
+  // Page Read Mode
+  START_PAGE_READ_MODE: "START_PAGE_READ_MODE",
+  STOP_PAGE_READ_MODE: "STOP_PAGE_READ_MODE",
+  PAUSE_PAGE_READ_MODE: "PAUSE_PAGE_READ_MODE",
+  RESUME_PAGE_READ_MODE: "RESUME_PAGE_READ_MODE",
+  GET_READ_MODE_STATUS: "GET_READ_MODE_STATUS",
+  REPEAT_LAST_SECTION: "REPEAT_LAST_SECTION",
 } as const;
 
 export type RuntimeMessageType =

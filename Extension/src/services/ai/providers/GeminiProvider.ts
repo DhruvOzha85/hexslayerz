@@ -51,15 +51,27 @@ export class GeminiProvider implements AIProvider {
       }
 
       let parsed;
+      let content = "No content generated.";
+      let title = "Conversation Summary";
       try {
         parsed = JSON.parse(textOutput);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          title = parsed.title || title;
+          if (parsed.content !== undefined) {
+            content = typeof parsed.content === "string" ? parsed.content : JSON.stringify(parsed.content);
+          } else {
+            content = textOutput;
+          }
+        } else {
+          content = textOutput;
+        }
       } catch (e) {
-        throw new Error("Gemini did not return valid JSON: " + textOutput);
+        content = textOutput;
       }
 
       return {
-        title: parsed.title || "Conversation Summary",
-        content: parsed.content || "No content generated.",
+        title,
+        content,
         providerUsed: AIProviderType.GEMINI,
       };
       

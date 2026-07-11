@@ -5,6 +5,7 @@ import { ScreenReaderButton } from "./ScreenReaderButton";
 import { Sparkles, FileSearch } from "lucide-react";
 
 import { SmartModes } from "./SmartModes";
+import { QuizWidget } from "./QuizWidget";
 
 const DEFAULT_SUGGESTIONS = [
   "📄 Summarize Page",
@@ -52,7 +53,8 @@ export function ContentView() {
     loadFromHistory,
     clearHistory,
     askQuestion,
-    smartMode
+    smartMode,
+    setSmartMode
   } = useContentStore();
 
   const getSuggestions = () => {
@@ -206,9 +208,14 @@ export function ContentView() {
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => {
-                    const input = document.getElementById("qa-input");
-                    input?.scrollIntoView({ behavior: "smooth", block: "center" });
-                    setTimeout(() => input?.focus(), 300);
+                    if (smartMode === "quiz") {
+                      setSmartMode(null);
+                    }
+                    setTimeout(() => {
+                      const input = document.getElementById("qa-input");
+                      input?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      setTimeout(() => input?.focus(), 300);
+                    }, 100);
                   }}
                   className="flex items-center gap-1.5 rounded-lg bg-emerald-600/20 px-3 py-1.5 text-xs font-bold text-emerald-400 transition-all hover:bg-emerald-600 hover:text-white shadow-sm hover:shadow-emerald-900/50 hover:-translate-y-0.5"
                   title="Scroll to AI Chat"
@@ -287,21 +294,28 @@ export function ContentView() {
           {/* Smart AI Modes */}
           <SmartModes />
 
-          {/* AI Suggestions */}
-          <div className="my-1 flex flex-wrap gap-1.5">
-            {activeSuggestions.map((suggestion, idx) => (
-              <button
-                key={idx}
-                onClick={() => askQuestion(suggestion)}
-                className="rounded-full border border-neutral-700 bg-neutral-800/50 px-2.5 py-1 text-[10px] font-medium text-neutral-300 transition-colors hover:bg-violet-900/30 hover:text-violet-300 hover:border-violet-700/50"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
+          {/* Quiz Widget or regular Chat */}
+          {smartMode === "quiz" ? (
+            <QuizWidget />
+          ) : (
+            <>
+              {/* AI Suggestions */}
+              <div className="my-1 flex flex-wrap gap-1.5">
+                {activeSuggestions.map((suggestion, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => askQuestion(suggestion)}
+                    className="rounded-full border border-neutral-700 bg-neutral-800/50 px-2.5 py-1 text-[10px] font-medium text-neutral-300 transition-colors hover:bg-violet-900/30 hover:text-violet-300 hover:border-violet-700/50"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
 
-          {/* AI Q&A Chat */}
-          <ContentChat />
+              {/* AI Q&A Chat */}
+              <ContentChat />
+            </>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-2 w-full mt-1">

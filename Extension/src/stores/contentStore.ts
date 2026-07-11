@@ -4,7 +4,7 @@ import { persist } from "zustand/middleware";
 import { ApplicationService } from "../services";
 import type { ExtractedContent, QAMessage } from "../services";
 
-export type SmartMode = "student" | "research" | "summary" | null;
+export type SmartMode = "student" | "research" | "summary" | "quiz" | null;
 
 interface ContentState {
   /** The extracted content result, or null if nothing extracted yet */
@@ -70,20 +70,34 @@ export const useContentStore = create<ContentState>()(
 
       extractContent: async () => {
         set({ isExtracting: true, error: null });
-        try {
+
+        // Create a timeout promise so extraction never hangs forever
+        const TIMEOUT_MS = 20000;
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(
+            "Extraction timed out. Please refresh the page (F5) and try again."
+          )), TIMEOUT_MS)
+        );
+
+        const extractionPromise = (async () => {
           let content = await ApplicationService.extractPageContent();
-          
+
           // Check for translation
           const settings = await ApplicationService.loadSettings();
           if (settings.extractionLanguage && settings.extractionLanguage !== "Original") {
             content = await ApplicationService.translateExtractedContent(content, settings.extractionLanguage);
           }
 
-          set((state) => ({ 
-            extractedContent: content, 
-            extractionHistory: [content, ...state.extractionHistory],
-            isExtracting: false, 
-            chatMessages: [] 
+          return content;
+        })();
+
+        try {
+          const content = await Promise.race([extractionPromise, timeoutPromise]);
+          set((state) => ({
+            extractedContent: content,
+            extractionHistory: [content, ...state.extractionHistory].slice(0, 3),
+            isExtracting: false,
+            chatMessages: [],
           }));
         } catch (error) {
           const message =
