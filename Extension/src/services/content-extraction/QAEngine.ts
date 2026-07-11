@@ -17,6 +17,7 @@ Instructions:
 - Do NOT translate unless necessary.
 - Keep the answer clear, concise, and based only on the webpage content.
 - Do not add extra information outside the page.
+- CRITICAL: DO NOT simply copy-paste or extract sentences directly from the text. You MUST read the content, understand it, and synthesize the answer in your own words.
 
 STRICT RULES:
 1. You MUST answer based ONLY on the provided webpage content. Do NOT use or add extra information from outside the page.
