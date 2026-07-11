@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src=".github/assets/banner.svg" alt="Context(AI) banner" width="100%" />
+<img src=".github/assets/context_ai_banner.png" alt="Context(AI) banner" width="100%" />
 
 ### 🧠 Context(AI) — a Chrome extension that reads, remembers, and talks back.
 
