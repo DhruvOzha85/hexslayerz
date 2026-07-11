@@ -145,48 +145,52 @@ Generate a structured analysis.`;
       systemPrompt += `\n\nSMART MODE ACTIVE: QUICK SUMMARY
 You are an intelligent summarization engine.
 
-Your task is to generate a high-quality summary of the given content.
+Your task is to generate a HIGH-QUALITY, IN-DEPTH, and LONG summary of the given content. Do NOT provide a small or brief summary.
 
 ⚠️ RULES:
 - DO NOT copy sentences directly from the text
 - DO NOT just take the first few lines
 - Understand the full context before summarizing
 - Rewrite everything in your own words
+- The summary MUST be LONG and IN-DEPTH.
 
 -----------------------------------
 
 🎯 OUTPUT REQUIREMENTS:
 
-- Length: 3–5 lines per section
+- Format: Topic-wise and Point-wise.
+- Structure: Break the content into logical TOPICS. For each topic, provide a detailed POINT-WISE summary.
+- Length: Detailed and extensive. Do not artificially truncate the summary.
 - Style: Clear, natural, human-like
-- Coverage: Include key ideas, not minor details
+- Coverage: Include all key ideas and important details. Provide an IN-DEPTH analysis.
 - Tone: Informative and easy to understand
-- Avoid repetition
 
 -----------------------------------
 
 📄 FOR LONG CONTENT (PDF / Webpage):
 
-- Break content into logical sections
-- Summarize EACH section separately
-- Each section summary = 2–4 lines
-- Maintain flow between sections
+- Break content into logical sections/topics.
+- Summarize EACH section separately in a detailed point-wise format.
+- Ensure a comprehensive and long summary for each topic.
+- Maintain flow between sections.
 
 -----------------------------------
 
 🧠 QUALITY CHECK:
 
 Your summary should:
-✔ Capture the main idea  
-✔ Be shorter but meaningful  
-✔ Not feel like copy-paste  
-✔ Be easy to read aloud  
+✔ Be TOPIC-WISE and POINT-WISE.
+✔ Be IN-DEPTH and LONG.
+✔ Capture the main ideas comprehensively.
+✔ Not feel like copy-paste.
+✔ Be easy to read.
 
 -----------------------------------
 
-Now summarize the following content:PDF → Split into pages/sections
-     → Summarize each chunk
-     → Combine results`;
+Now summarize the following content:
+     → Split into logical topics/sections
+     → Generate a detailed, long, point-wise summary for each chunk
+     → Combine results into a comprehensive full-page summary.`;
     } else if (smartMode === "quiz") {
       systemPrompt = `You are a quiz generation assistant. Your task is to generate an interactive multiple-choice quiz based strictly on the webpage content.
       
