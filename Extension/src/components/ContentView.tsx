@@ -2,7 +2,7 @@ import { useContentStore } from "../stores";
 import { TabService } from "../services/chrome/TabService";
 import { ContentChat } from "./ContentChat";
 import { ScreenReaderButton } from "./ScreenReaderButton";
-import { Sparkles, FileSearch } from "lucide-react";
+import { Sparkles, FileSearch, FileText } from "lucide-react";
 
 import { SmartModes } from "./SmartModes";
 import { QuizWidget } from "./QuizWidget";
@@ -54,7 +54,8 @@ export function ContentView() {
     clearHistory,
     askQuestion,
     smartMode,
-    setSmartMode
+    setSmartMode,
+    pageSummary
   } = useContentStore();
 
   const getSuggestions = () => {
@@ -259,38 +260,19 @@ export function ContentView() {
             </div>
           </div>
 
-          {/* Sections (The Wikipedia Topics) */}
-          <div className="flex flex-col gap-3 mt-4">
-            {extractedContent.sections.length > 0 ? (
-              extractedContent.sections.map((section, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm"
-                >
-                  {section.heading && (
-                    <h3 className="mb-1.5 text-sm font-semibold text-neutral-200">
-                      {section.heading}
-                    </h3>
-                  )}
-                  {section.text && (
-                    <p className="text-xs leading-relaxed text-neutral-400 whitespace-pre-wrap">
-                      {section.text.length > 500
-                        ? `${section.text.slice(0, 500)}…`
-                        : section.text}
-                    </p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm">
-                <p className="text-xs leading-relaxed text-neutral-400 whitespace-pre-wrap">
-                  {extractedContent.content.length > 2000
-                    ? `${extractedContent.content.slice(0, 2000)}…`
-                    : extractedContent.content}
-                </p>
-              </div>
-            )}
-          </div>
+          {/* Page Summary */}
+          {pageSummary && (
+            <div className="rounded-xl border border-violet-800/50 bg-violet-950/20 p-4 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-violet-500"></div>
+              <h3 className="mb-2 text-xs font-bold text-violet-300 uppercase tracking-wider flex items-center gap-1.5">
+                <FileText className="h-3 w-3" />
+                Page Summary
+              </h3>
+              <p className="text-sm leading-relaxed text-neutral-200 whitespace-pre-wrap">
+                {pageSummary}
+              </p>
+            </div>
+          )}
 
           {/* Smart AI Modes */}
           <SmartModes />
