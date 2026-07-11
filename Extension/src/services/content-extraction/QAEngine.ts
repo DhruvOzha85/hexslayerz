@@ -142,9 +142,10 @@ Mention limitations if any.
 Generate a structured analysis.`;
     } else if (smartMode === "summary") {
       systemPrompt += `\n\nSMART MODE ACTIVE: QUICK SUMMARY
-Provide a concise summary of the webpage.
+Provide a concise, synthesized summary of the webpage.
+CRITICAL: DO NOT simply copy-paste or extract sentences directly from the text. You MUST read the content, understand it, and write the summary in your own words.
 Maximum 5 bullet points.
-Highlight only the most important information.
+Highlight the core concepts and most important information.
 Keep the response under one minute of reading.`;
     } else if (smartMode === "quiz") {
       systemPrompt = `You are a quiz generation assistant. Your task is to generate an interactive multiple-choice quiz based strictly on the webpage content.
