@@ -54,7 +54,8 @@ export function ContentView() {
     clearHistory,
     askQuestion,
     smartMode,
-    setSmartMode
+    setSmartMode,
+    pageSummary
   } = useContentStore();
 
   const getSuggestions = () => {
@@ -259,39 +260,19 @@ export function ContentView() {
             </div>
           </div>
 
-          {/* Sections (Hidden by default to prioritize summary) */}
-          <details className="group rounded-xl border border-neutral-800 bg-neutral-950 p-3 shadow-sm">
-            <summary className="cursor-pointer text-xs font-semibold text-neutral-400 hover:text-white transition-colors">
-              View Raw Extracted Text
-            </summary>
-            <div className="mt-3 flex flex-col gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-              {extractedContent.sections.length > 0 ? (
-                extractedContent.sections.map((section, idx) => (
-                  <div
-                    key={idx}
-                    className="rounded-lg border border-neutral-800/50 bg-neutral-900/30 p-3"
-                  >
-                    {section.heading && (
-                      <h3 className="mb-1.5 text-sm font-semibold text-neutral-300">
-                        {section.heading}
-                      </h3>
-                    )}
-                    {section.text && (
-                      <p className="text-xs leading-relaxed text-neutral-500 whitespace-pre-wrap">
-                        {section.text}
-                      </p>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-lg border border-neutral-800/50 bg-neutral-900/30 p-3">
-                  <p className="text-xs leading-relaxed text-neutral-500 whitespace-pre-wrap">
-                    {extractedContent.content}
-                  </p>
-                </div>
-              )}
+          {/* AI Page Summary */}
+          {pageSummary && (
+            <div className="rounded-xl border border-violet-800/50 bg-violet-950/20 p-4 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-violet-500"></div>
+              <h3 className="mb-2 text-xs font-bold text-violet-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3" />
+                AI Summary
+              </h3>
+              <p className="text-sm leading-relaxed text-neutral-200 whitespace-pre-wrap">
+                {pageSummary}
+              </p>
             </div>
-          </details>
+          )}
 
           {/* Smart AI Modes */}
           <SmartModes />

@@ -49,6 +49,10 @@ interface ContentState {
   smartMode: SmartMode;
   /** Sets the active AI Smart Mode */
   setSmartMode: (mode: SmartMode) => void;
+
+  // --- Auto Summary ---
+  /** AI generated summary of the page */
+  pageSummary: string | null;
 }
 
 export const useContentStore = create<ContentState>()(
@@ -63,13 +67,14 @@ export const useContentStore = create<ContentState>()(
       readingProgress: 0,
       lastSpokenMessage: null,
       smartMode: null,
+      pageSummary: null,
 
       setReadingProgress: (index) => set({ readingProgress: index }),
       setLastSpokenMessage: (msg) => set({ lastSpokenMessage: msg }),
       setSmartMode: (mode) => set({ smartMode: mode }),
 
       extractContent: async () => {
-        set({ isExtracting: true, error: null });
+        set({ isExtracting: true, error: null, pageSummary: null });
 
         // Create a timeout promise so extraction never hangs forever
         const TIMEOUT_MS = 20000;
@@ -98,10 +103,16 @@ export const useContentStore = create<ContentState>()(
             extractionHistory: [content, ...state.extractionHistory].slice(0, 3),
             isExtracting: false,
             chatMessages: [],
+            pageSummary: "Generating AI summary...", // Initial loading state
           }));
 
-          // Automatically trigger a summary request using the QA Engine so the user sees a summary immediately
-          get().askQuestion("Please provide a concise, synthesized summary of this page in your own words.");
+          // Fetch the summary silently and store it in pageSummary instead of polluting chat
+          const answer = await ApplicationService.askPageQuestion(
+            "Please provide a proper synthesized summary of this page in a few lines of text.",
+            content,
+            "summary"
+          ).catch(() => "Summary generation failed.");
+          set({ pageSummary: answer });
         } catch (error) {
           const message =
             error instanceof Error
@@ -134,6 +145,7 @@ export const useContentStore = create<ContentState>()(
           isExtracting: false,
           chatMessages: [],
           isAsking: false,
+          pageSummary: null,
         });
       },
 
