@@ -49,10 +49,6 @@ interface ContentState {
   smartMode: SmartMode;
   /** Sets the active AI Smart Mode */
   setSmartMode: (mode: SmartMode) => void;
-
-  // --- Auto Summary ---
-  /** AI generated summary of the page */
-  pageSummary: string | null;
 }
 
 export const useContentStore = create<ContentState>()(
@@ -67,14 +63,13 @@ export const useContentStore = create<ContentState>()(
       readingProgress: 0,
       lastSpokenMessage: null,
       smartMode: null,
-      pageSummary: null,
 
       setReadingProgress: (index) => set({ readingProgress: index }),
       setLastSpokenMessage: (msg) => set({ lastSpokenMessage: msg }),
       setSmartMode: (mode) => set({ smartMode: mode }),
 
       extractContent: async () => {
-        set({ isExtracting: true, error: null, pageSummary: null });
+        set({ isExtracting: true, error: null });
 
         // Create a timeout promise so extraction never hangs forever
         const TIMEOUT_MS = 20000;
@@ -103,16 +98,7 @@ export const useContentStore = create<ContentState>()(
             extractionHistory: [content, ...state.extractionHistory].slice(0, 3),
             isExtracting: false,
             chatMessages: [],
-            pageSummary: "Generating AI summary...", // Initial loading state
           }));
-
-          // Fetch the summary silently and store it in pageSummary instead of polluting chat
-          const answer = await ApplicationService.askPageQuestion(
-            "Please summarize this content exactly according to the strict OUTPUT REQUIREMENTS and QUALITY CHECK rules in your system prompt.",
-            content,
-            "summary"
-          ).catch(() => "Summary generation failed.");
-          set({ pageSummary: answer });
         } catch (error) {
           const message =
             error instanceof Error
@@ -145,7 +131,6 @@ export const useContentStore = create<ContentState>()(
           isExtracting: false,
           chatMessages: [],
           isAsking: false,
-          pageSummary: null,
         });
       },
 
