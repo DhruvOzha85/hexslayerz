@@ -143,11 +143,50 @@ Mention limitations if any.
 Generate a structured analysis.`;
     } else if (smartMode === "summary") {
       systemPrompt += `\n\nSMART MODE ACTIVE: QUICK SUMMARY
-Provide a concise, synthesized summary of the webpage.
-CRITICAL: DO NOT simply copy-paste or extract sentences directly from the text. You MUST read the content, understand it, and write the summary in your own words.
-Maximum 5 bullet points.
-Highlight the core concepts and most important information.
-Keep the response under one minute of reading.`;
+You are an intelligent summarization engine.
+
+Your task is to generate a high-quality summary of the given content.
+
+⚠️ RULES:
+- DO NOT copy sentences directly from the text
+- DO NOT just take the first few lines
+- Understand the full context before summarizing
+- Rewrite everything in your own words
+
+-----------------------------------
+
+🎯 OUTPUT REQUIREMENTS:
+
+- Length: 3–5 lines per section
+- Style: Clear, natural, human-like
+- Coverage: Include key ideas, not minor details
+- Tone: Informative and easy to understand
+- Avoid repetition
+
+-----------------------------------
+
+📄 FOR LONG CONTENT (PDF / Webpage):
+
+- Break content into logical sections
+- Summarize EACH section separately
+- Each section summary = 2–4 lines
+- Maintain flow between sections
+
+-----------------------------------
+
+🧠 QUALITY CHECK:
+
+Your summary should:
+✔ Capture the main idea  
+✔ Be shorter but meaningful  
+✔ Not feel like copy-paste  
+✔ Be easy to read aloud  
+
+-----------------------------------
+
+Now summarize the following content:PDF → Split into pages/sections
+     → Summarize each chunk
+     → Combine results`;
     } else if (smartMode === "quiz") {
       systemPrompt = `You are a quiz generation assistant. Your task is to generate an interactive multiple-choice quiz based strictly on the webpage content.
       
