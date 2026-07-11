@@ -96,8 +96,8 @@ export class QAEngine {
 
     const contextBlock = sectionsText || pageContent.content;
 
-    // Truncate to avoid token limits (~15k chars ≈ ~4k tokens)
-    const maxChars = 15000;
+    // Truncate to avoid extremely massive payloads, but keep it high enough for full pages (~100k chars ≈ ~25k tokens)
+    const maxChars = 100000;
     const truncatedContext =
       contextBlock.length > maxChars
         ? contextBlock.slice(0, maxChars) + "\n\n[Content truncated...]"
