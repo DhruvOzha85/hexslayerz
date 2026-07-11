@@ -99,6 +99,9 @@ export const useContentStore = create<ContentState>()(
             isExtracting: false,
             chatMessages: [],
           }));
+
+          // Automatically trigger a summary request using the QA Engine so the user sees a summary immediately
+          get().askQuestion("Please provide a concise, synthesized summary of this page in your own words.");
         } catch (error) {
           const message =
             error instanceof Error

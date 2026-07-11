@@ -259,37 +259,39 @@ export function ContentView() {
             </div>
           </div>
 
-          {/* Sections */}
-          {extractedContent.sections.length > 0 ? (
-            extractedContent.sections.map((section, idx) => (
-              <div
-                key={idx}
-                className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm"
-              >
-                {section.heading && (
-                  <h3 className="mb-1.5 text-sm font-semibold text-neutral-200">
-                    {section.heading}
-                  </h3>
-                )}
-                {section.text && (
-                  <p className="text-xs leading-relaxed text-neutral-400 whitespace-pre-wrap">
-                    {section.text.length > 500
-                      ? `${section.text.slice(0, 500)}…`
-                      : section.text}
+          {/* Sections (Hidden by default to prioritize summary) */}
+          <details className="group rounded-xl border border-neutral-800 bg-neutral-950 p-3 shadow-sm">
+            <summary className="cursor-pointer text-xs font-semibold text-neutral-400 hover:text-white transition-colors">
+              View Raw Extracted Text
+            </summary>
+            <div className="mt-3 flex flex-col gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+              {extractedContent.sections.length > 0 ? (
+                extractedContent.sections.map((section, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-lg border border-neutral-800/50 bg-neutral-900/30 p-3"
+                  >
+                    {section.heading && (
+                      <h3 className="mb-1.5 text-sm font-semibold text-neutral-300">
+                        {section.heading}
+                      </h3>
+                    )}
+                    {section.text && (
+                      <p className="text-xs leading-relaxed text-neutral-500 whitespace-pre-wrap">
+                        {section.text}
+                      </p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-lg border border-neutral-800/50 bg-neutral-900/30 p-3">
+                  <p className="text-xs leading-relaxed text-neutral-500 whitespace-pre-wrap">
+                    {extractedContent.content}
                   </p>
-                )}
-              </div>
-            ))
-          ) : (
-            /* Full text fallback if no sections were parsed */
-            <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 shadow-sm">
-              <p className="text-xs leading-relaxed text-neutral-400 whitespace-pre-wrap">
-                {extractedContent.content.length > 2000
-                  ? `${extractedContent.content.slice(0, 2000)}…`
-                  : extractedContent.content}
-              </p>
+                </div>
+              )}
             </div>
-          )}
+          </details>
 
           {/* Smart AI Modes */}
           <SmartModes />
