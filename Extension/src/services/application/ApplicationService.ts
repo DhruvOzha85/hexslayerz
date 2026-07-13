@@ -13,7 +13,7 @@ import { SettingsService, type ContextAISettings } from "../settings";
 import { DataService } from "../data";
 import { TabService } from "../chrome/TabService";
 import type { ExtractedContent } from "../content-extraction";
-import { QAEngine, PdfExtractor } from "../content-extraction";
+import { QAEngine, PdfExtractor, YoutubeExtractor } from "../content-extraction";
 
 export class ApplicationService {
   /**
@@ -160,6 +160,11 @@ export class ApplicationService {
       throw new Error(
         "Cannot extract content from Chrome system pages. Navigate to a regular webpage."
       );
+    }
+
+    // Handle YouTube videos directly in the popup/background
+    if (tab.url.includes("youtube.com/watch") || tab.url.includes("youtu.be/")) {
+      return await YoutubeExtractor.extract(tab.url, tab.id);
     }
 
     // Handle PDFs directly in the popup/background
